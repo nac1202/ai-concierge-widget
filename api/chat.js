@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const { history, imageBase64, systemPrompt } = req.body;
 
     let dynamicPrompt = systemPrompt || "";
-    
+
     // Construct payload for Gemini
     let contents = history;
 
@@ -36,32 +36,32 @@ export default async function handler(req, res) {
       // OR we can reconstruct it here.
       // Let's rely on the client assuming it sends the 'contents' structure 
       // compatible with Gemini, OR we reconstruct it if it's our internal format.
-      
+
       // Let's assume the client sends the cleaner "contents" list already formatted for Gemini if possible,
       // BUT the client-side logic for "multimodal" was complex.
       // Let's stick to the client sending "history" (our internal format) and "imageBase64".
-      
-       const historyCopy = JSON.parse(JSON.stringify(history));
-       const lastTurn = historyCopy[historyCopy.length - 1];
-        if (lastTurn && lastTurn.role === "user") {
-            const rawBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
-             lastTurn.parts = [
-                { text: "お客様が撮影した画像です。内容を説明し、もしメニューや商品が分かれば教えてください。" },
-                { inline_data: { mime_type: "image/png", data: rawBase64 } }
-            ];
-        }
-        contents = historyCopy;
+
+      const historyCopy = JSON.parse(JSON.stringify(history));
+      const lastTurn = historyCopy[historyCopy.length - 1];
+      if (lastTurn && lastTurn.role === "user") {
+        const rawBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+        lastTurn.parts = [
+          { text: "お客様が撮影した画像です。内容を説明し、もしメニューや商品が分かれば教えてください。" },
+          { inline_data: { mime_type: "image/png", data: rawBase64 } }
+        ];
+      }
+      contents = historyCopy;
     }
 
     const payload = {
-        system_instruction: { parts: [{ text: dynamicPrompt }] },
-        contents: contents
+      system_instruction: { parts: [{ text: dynamicPrompt }] },
+      contents: contents
     };
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json();
