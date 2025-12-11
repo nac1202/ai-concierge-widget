@@ -69,6 +69,24 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: { message: error.message } });
+
+    // Attempt to list models to help debugging
+    try {
+      const listResponse = await fetch("https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey);
+      const listData = await listResponse.json();
+
+      let availableModels = "Models lookup failed";
+      if (listData && listData.models) {
+        availableModels = listData.models.map(m => m.name).filter(n => n.includes("gemini")).join(", ");
+      }
+
+      return res.status(500).json({
+        error: {
+          message: `Model Error: ${error.message}. \n\nAvailable Models for this Key: [${availableModels}]`
+        }
+      });
+    } catch (listError) {
+      res.status(500).json({ error: { message: error.message + " (Failed to list models)" } });
+    }
   }
 }
