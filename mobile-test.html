@@ -357,6 +357,7 @@
         }
 
         /* Responsive */
+        /* Responsive Mobile Styles */
         @media (max-width: 768px) {
             .hero-inner {
                 flex-direction: column;
@@ -391,14 +392,76 @@
                 grid-template-columns: 1fr;
             }
 
+            /* --- WIDGET MOBILE OPTIMIZATION --- */
+
+            /* Container: Position bottom-right, minimize interference */
             #ai-widget {
-                right: 10px;
-                bottom: 10px;
+                right: 0;
+                bottom: 0;
+                width: auto;
+                height: auto;
+                z-index: 10000;
+                flex-direction: column;
+                align-items: flex-end;
+                padding: 16px;
+                pointer-events: none;
+                /* Allow clicks to pass through wrapper */
             }
 
+            #ai-widget>* {
+                pointer-events: auto;
+                /* Re-enable clicks on button/window */
+            }
+
+            /* Assistant Portrait (Toggle Button) */
             .assistant-portrait {
                 width: 55px;
+                /* Much smaller to not oppress content */
+                margin-right: 0;
+                margin-bottom: 0;
+                transition: transform 0.3s ease;
             }
+
+            /* Chat Window: Full Screen Modal on Mobile */
+            #chat-window {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                /* Full screen */
+                border-radius: 0;
+                margin: 0;
+                max-width: none;
+                z-index: 20000;
+                display: none;
+                /* default hidden */
+                flex-direction: column;
+
+                /* Safe Area for modern phones */
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                background-color: rgba(255, 255, 255, 0.95);
+                /* Nearly opaque background */
+                backdrop-filter: blur(10px);
+            }
+
+            /* Ensure the inner container fills the space */
+            .chat-inner {
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+            }
+
+            /* Hide the portrait when chat is open to save space (optional, via JS) 
+               or just let it sit behind/under. With z-index 20000, window covers it.
+            */
+
+            /* Add a specific "Mobile Close" button visibility if needed, 
+               but the header already has a close button.
+            */
         }
 
         /* --- CONCIERGE WIDGET STYLES --- */
@@ -1188,7 +1251,6 @@
         }
 
         /* --- FINAL MOBILE OVERRIDES --- */
-        /* --- FINAL MOBILE OVERRIDES --- */
         @media (max-width: 768px) {
             #assistant-avatar img {
                 width: 55px !important;
@@ -1488,36 +1550,38 @@
             const aiWidget = document.getElementById("ai-widget");
             const assistantAvatar = document.getElementById("assistant-avatar");
 
-            // --- Mobile Avatar Size Enforcer (Fallback) ---
+            // --- Mobile Avatar Size Enforcer (User Provided Loop) ---
             function enforceMobileAvatarSize() {
-                const assistantAvatar = document.getElementById("assistant-avatar");
-                if (!assistantAvatar) return;
-
-                const img = assistantAvatar.querySelector("img");
+                const avatar = document.getElementById("assistant-avatar");
+                if (!avatar) return;
+                const img = avatar.querySelector("img");
                 if (!img) return;
 
                 if (window.innerWidth <= 768) {
-                    // スマホ：55x55 の小さいアバターを使用
-                    if (!img.src.includes("assistant-55.png")) {
-                        img.src = "assistant-55.png?v=" + Date.now(); // キャッシュバスター
+                    // Mobile
+                    // Optimization: Only update src if it's not already the 55 version (ignoring timestamp for check)
+                    if (!img.currentSrc.includes("assistant-55.png")) {
+                        img.src = "assistant-55.png?v=" + Date.now();
                     }
-                    img.style.width = "55px";
-                    img.style.height = "55px";
-                    assistantAvatar.style.width = "55px";
-                    assistantAvatar.style.height = "55px";
+                    img.style.setProperty("width", "55px", "important");
+                    img.style.setProperty("height", "55px", "important");
+                    img.style.setProperty("max-width", "55px", "important");
+                    img.style.setProperty("max-height", "55px", "important");
+
                 } else {
-                    // PC：通常のアバターに戻す
-                    if (!img.src.includes("assistant.png")) {
+                    // Desktop
+                    if (!img.currentSrc.includes("assistant.png") || img.currentSrc.includes("assistant-55.png")) {
                         img.src = "assistant.png?v=" + Date.now();
                     }
                     img.style.width = "";
                     img.style.height = "";
-                    assistantAvatar.style.width = "";
-                    assistantAvatar.style.height = "";
+                    img.style.maxWidth = "";
+                    img.style.maxHeight = "";
                 }
             }
 
             window.addEventListener("resize", enforceMobileAvatarSize);
+            window.addEventListener("DOMContentLoaded", enforceMobileAvatarSize);
             enforceMobileAvatarSize();
             const chatWindow = document.getElementById("chat-window");
             const closeBtn = document.getElementById("close-chat");
