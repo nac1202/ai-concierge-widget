@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       contents: contents
     };
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=" + apiKey, {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -82,11 +82,11 @@ export default async function handler(req, res) {
 
       return res.status(500).json({
         error: {
-          message: `Model Error: ${error.message}. \n\nAvailable Models for this Key: [${availableModels}]`
+          message: `(v3) Model Error: ${error.message}. \n\nAvailable Models for this Key: [${availableModels}]`
         }
       });
     } catch (listError) {
-      res.status(500).json({ error: { message: error.message + " (Failed to list models)" } });
+      res.status(500).json({ error: { message: `(v3) ${error.message} (Failed to list models)` } });
     }
   }
 }
