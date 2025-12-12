@@ -1820,7 +1820,8 @@
             // DOM-based Context Collection (For Prompt)
             function collectPageMenuContext() {
                 const cards = document.querySelectorAll("[data-menu-card]");
-                if (!cards.length) return null;
+                // Note: We might want to run even if no menu cards, but current logic returns null.
+                // Let's allow partial context.
 
                 const items = Array.from(cards).map((card, index) => {
                     const titleEl = card.querySelector(".menu-title");
@@ -1835,8 +1836,27 @@
                     };
                 });
 
+                // Scrape Store Info
+                const storeSection = document.querySelector("[data-store-info]");
+                let storeInfoText = "";
+                if (storeSection) {
+                    storeInfoText = storeSection.innerText.replace(/\n+/g, " ").trim();
+                }
+
+                // Scrape FAQ
+                const faqItems = document.querySelectorAll("[data-faq-item]");
+                const faqList = Array.from(faqItems).map(item => {
+                    const q = item.querySelector(".faq-question")?.textContent.trim();
+                    const a = item.querySelector(".faq-answer")?.textContent.trim();
+                    return { q, a };
+                });
+
+                if (!items.length && !storeInfoText && !faqList.length) return null;
+
                 return {
                     siteName: document.title || "Miryu Burger Demo",
+                    storeInfo: storeInfoText,
+                    faq: faqList,
                     items
                 };
             }
