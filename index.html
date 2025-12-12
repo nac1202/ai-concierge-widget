@@ -1480,8 +1480,29 @@
             widgetDiv.innerHTML = WIDGET_HTML;
             document.body.appendChild(widgetDiv);
 
-            if (options.primaryColor) {
-                document.documentElement.style.setProperty('--widget-theme-color', options.primaryColor);
+            // Auto-detect Brand Color
+            function autoDetectBrandColor() {
+                // 1. Try CSS Variable --primary-color from the parent document
+                const rootStyle = getComputedStyle(document.documentElement);
+                const primaryVar = rootStyle.getPropertyValue('--primary-color').trim();
+                if (primaryVar) return primaryVar;
+
+                // 2. Try Header Background
+                const header = document.querySelector('header');
+                if (header) {
+                    const headerBg = getComputedStyle(header).backgroundColor;
+                    if (headerBg && headerBg !== 'rgba(0, 0, 0, 0)' && headerBg !== 'transparent') {
+                        return headerBg;
+                    }
+                }
+                return null;
+            }
+
+            const detectedColor = autoDetectBrandColor();
+            const initialColor = detectedColor || options.primaryColor;
+
+            if (initialColor) {
+                document.documentElement.style.setProperty('--widget-theme-color', initialColor);
             }
 
             // --- Elements ---
@@ -2244,15 +2265,22 @@
                 };
 
                 const handleSttToggle = (e) => {
-                    e.preventDefault(); // Prevent ghost clicks if touch
+                    e.preventDefault(); // Prevent ghost clicks
                     e.stopPropagation();
                     if (isListening) stopListening();
                     else startListening();
                 };
 
-                sttBtn.addEventListener("mousedown", handleSttToggle); // Better than click for desktop responsiveness
-                sttBtn.addEventListener("touchstart", handleSttToggle, { passive: false });
-            } else { sttBtn.style.display = "none"; }
+                // As requested: click and touchend
+                sttBtn.addEventListener("click", handleSttToggle);
+                sttBtn.addEventListener("touchend", handleSttToggle);
+            } else {
+                // Unsupported Browser Handling
+                sttBtn.disabled = true;
+                sttBtn.style.opacity = "0.5";
+                sttBtn.style.cursor = "not-allowed";
+                sttBtn.title = "このブラウザでは音声入力に対応していません";
+            }
 
             // Ensure clean state on init
             if (sttBtn) sttBtn.classList.remove("listening", "recording");
