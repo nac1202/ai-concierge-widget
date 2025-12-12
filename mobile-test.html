@@ -2307,10 +2307,15 @@
                     sttBtn.classList.remove("listening");
                 };
 
-                sttBtn.addEventListener("click", () => {
+                const handleSttToggle = (e) => {
+                    e.preventDefault(); // Prevent ghost clicks if touch
+                    e.stopPropagation();
                     if (isListening) stopListening();
                     else startListening();
-                });
+                };
+
+                sttBtn.addEventListener("mousedown", handleSttToggle); // Better than click for desktop responsiveness
+                sttBtn.addEventListener("touchstart", handleSttToggle, { passive: false });
             } else { sttBtn.style.display = "none"; }
 
             // Ensure clean state on init
