@@ -1191,10 +1191,10 @@
         /* --- FINAL MOBILE OVERRIDES --- */
         @media (max-width: 768px) {
             #assistant-avatar img {
-                width: 55px !important;
-                height: 55px !important;
-                max-width: 55px !important;
-                max-height: 55px !important;
+                width: 100px !important;
+                height: 100px !important;
+                max-width: 100px !important;
+                max-height: 100px !important;
             }
         }
     </style>
@@ -1497,14 +1497,14 @@
                 if (!img) return;
 
                 if (window.innerWidth <= 768) {
-                    // スマホ：55x55 の小さいアバターを使用
+                    // スマホ：100x100 の小さいアバターを使用
                     if (!img.src.includes("assistant-55.png")) {
                         img.src = "assistant-55.png?v=" + Date.now(); // キャッシュバスター
                     }
-                    img.style.width = "55px";
-                    img.style.height = "55px";
-                    assistantAvatar.style.width = "55px";
-                    assistantAvatar.style.height = "55px";
+                    img.style.width = "100px";
+                    img.style.height = "100px";
+                    assistantAvatar.style.width = "100px";
+                    assistantAvatar.style.height = "100px";
                 } else {
                     // PC：通常のアバターに戻す
                     if (!img.src.includes("assistant.png")) {
