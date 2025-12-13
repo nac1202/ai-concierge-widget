@@ -2036,14 +2036,19 @@
                     const titleEl = card.querySelector(".menu-title");
                     const descEl = card.querySelector(".menu-description");
                     const priceEl = card.querySelector(".menu-price");
+                    const imgEl = card.querySelector("img");
 
                     return {
                         id: `menu_${index + 1}`,
                         name: titleEl ? titleEl.textContent.trim() : "",
                         description: descEl ? descEl.textContent.trim() : "",
                         price: priceEl ? priceEl.textContent.trim() : "",
+                        image: imgEl ? imgEl.src : "https://placehold.co/300x200?text=No+Image"
                     };
                 });
+
+                // ... existing store/faq code ... (omitted in this replace chunk, assuming context)
+                // Wait, I need to make sure I don't break the function.
 
                 // Scrape Store Info
                 const storeSection = document.querySelector("[data-store-info]");
@@ -2068,6 +2073,52 @@
                     faq: faqList,
                     items
                 };
+            }
+
+            // Quick Actions
+            window.triggerQuickAction = function (action) {
+                if (action === 'reservation') {
+                    if (checkBusinessHours()) {
+                        renderReservationForm();
+                    } else {
+                        addMessage(WIDGET_CONFIG.messages.offHours, 'bot');
+                    }
+                } else if (action === 'recommend') {
+                    const context = collectPageMenuContext();
+                    if (context && context.items && context.items.length > 0) {
+                        // Pick random item
+                        const randomItem = context.items[Math.floor(Math.random() * context.items.length)];
+                        addMessage("おすすめのメニューですね！こちらはいかがでしょうか？", 'bot');
+                        renderProductCard(randomItem);
+                    } else {
+                        // Fallback
+                        addMessage("おすすめのメニューですね！\n申し訳ありません、現在メニュー情報を取得できませんでした。", 'bot');
+                    }
+                } else if (action === 'faq') {
+                    addMessage("よくあるご質問ですね。何について知りたいですか？", 'bot');
+                }
+            };
+
+            function renderProductCard(product) {
+                // Ensure image URL is absolute or valid
+                const safeImage = product.image || "assistant.png";
+
+                const cardHtml = `
+                    <div class="product-card" style="background:#fff; border:1px solid #ddd; border-radius:8px; overflow:hidden; margin-top:8px;">
+                        <img src="${safeImage}" alt="${product.name}" style="width:100%; height:150px; object-fit:cover;">
+                        <div style="padding:10px;">
+                            <div style="font-weight:bold; font-size:14px; margin-bottom:4px;">${product.name}</div>
+                            <div style="font-size:12px; color:#666; margin-bottom:4px;">${product.description}</div>
+                            <div style="font-weight:bold; color:var(--widget-theme-color);">${product.price}</div>
+                        </div>
+                    </div>
+                `;
+
+                const chatMessages = document.getElementById("chat-messages");
+                const div = document.createElement("div");
+                div.innerHTML = cardHtml;
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             }
 
             // API Call
