@@ -1421,16 +1421,35 @@
                 transition: all 0.2s;
                 color: #333;
                 user-select: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
             }
             .action-chip:hover {
                 background: var(--widget-theme-color);
                 color: white;
                 border-color: var(--widget-theme-color);
             }
+            .action-chip svg {
+                width: 14px; 
+                height: 14px;
+                stroke-width: 2;
+                stroke: currentColor;
+                fill: none;
+            }
             .header-controls {
                 display: flex;
                 align-items: center;
                 gap: 5px;
+            }
+            .header-btn svg {
+                width: 20px;
+                height: 20px;
+                stroke: currentColor;
+                stroke-width: 2;
+                fill: none;
+                stroke-linecap: round;
+                stroke-linejoin: round;
             }
             /* Reservation Form inside Chat */
             .reservation-form {
@@ -1467,18 +1486,34 @@
                                 <span class="header-title">Concierge</span>
                             </div>
                             <div class="header-controls">
-                                <button class="header-btn" id="theme-btn" title="テーマカラー変更">🎨</button>
-                                <button class="header-btn" id="opacity-toggle" title="透明度切替">👁️</button>
-                                <button class="header-btn" id="avatar-toggle" title="アバター表示切替">😀</button>
-                                <button class="header-btn" id="tts-toggle" title="音声読み上げ">🔈</button>
-                                <button class="header-btn close-btn" id="close-chat" title="閉じる">✕</button>
+                                <button class="header-btn" id="theme-btn" title="テーマカラー変更">
+                                    <svg viewBox="0 0 24 24"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10z"/><circle cx="8" cy="7" r="1.5"/><circle cx="16" cy="7" r="1.5"/><circle cx="8" cy="17" r="1.5"/></svg>
+                                </button>
+                                <button class="header-btn" id="opacity-toggle" title="透明度切替">
+                                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="header-btn" id="avatar-toggle" title="アバター表示切替">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                                </button>
+                                <button class="header-btn" id="tts-toggle" title="音声読み上げ">
+                                    <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                                </button>
+                                <button class="header-btn close-btn" id="close-chat" title="閉じる">
+                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
                             </div>
                         </div>
                         
                         <!-- Quick Actions Bar -->
                         <div class="quick-actions" id="quick-actions">
-                            <span class="action-chip" onclick="window.triggerQuickAction('reservation')">📅 来店予約</span>
-                            <span class="action-chip" onclick="window.triggerQuickAction('recommend')">🍔 おすすめ</span>
+                            <span class="action-chip" onclick="window.triggerQuickAction('reservation')">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                来店予約
+                            </span>
+                            <span class="action-chip" onclick="window.triggerQuickAction('recommend')">
+                                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                おすすめ
+                            </span>
                         </div>
 
                         <div id="chat-messages">
