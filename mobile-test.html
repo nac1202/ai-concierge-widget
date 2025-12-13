@@ -1489,6 +1489,11 @@
                 color: white;
                 border-color: var(--widget-theme-color);
             }
+            .header-controls {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
             /* Reservation Form inside Chat */
             .reservation-form {
                 background: #fff;
@@ -1523,26 +1528,33 @@
                                 </span>
                                 <span class="header-title">Concierge</span>
                             </div>
-                                <button id="tts-toggle" class="header-btn" title="音声オン/オフ">
-                                    <svg class="icon-line" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                                </button>
-                                <button id="close-chat" class="header-btn" title="チャットを閉じる">
-                                    <svg class="icon-line" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                </button>
-                            </div>
-                            <div id="color-popup" class="color-popup">
-                                <div class="color-option" style="background:#4169e1;" data-color="#4169e1" title="Blue"></div>
-                                <div class="color-option" style="background:#ff4d4d;" data-color="#ff4d4d" title="Red"></div>
-                                <div class="color-option" style="background:#ff8c00;" data-color="#ff8c00" title="Orange"></div>
-                                <div class="color-option" style="background:#20b2aa;" data-color="#20b2aa" title="Light Sea Green"></div>
-                                <div class="color-option" style="background:#ff69b4;" data-color="#ff69b4" title="Pink"></div>
-                                <div class="color-option" style="background:#333333;" data-color="#333333" title="Black"></div>
-                                <div class="color-option" style="background:#8a2be2;" data-color="#8a2be2" title="Violet"></div>
-                                <div class="color-option" style="background:#008080;" data-color="#008080" title="Teal"></div>
+                            <div class="header-controls">
+                                <button class="header-btn" id="theme-btn" title="テーマカラー変更">🎨</button>
+                                <button class="header-btn" id="opacity-toggle" title="透明度切替">👁️</button>
+                                <button class="header-btn" id="avatar-toggle" title="アバター表示切替">😀</button>
+                                <button class="header-btn" id="tts-toggle" title="音声読み上げ">🔈</button>
+                                <button class="header-btn close-btn" id="close-chat" title="閉じる">✕</button>
                             </div>
                         </div>
+                        
+                        <!-- Quick Actions Bar -->
+                        <div class="quick-actions" id="quick-actions">
+                            <span class="action-chip" onclick="window.triggerQuickAction('reservation')">📅 来店予約</span>
+                            <span class="action-chip" onclick="window.triggerQuickAction('recommend')">🍔 おすすめ</span>
+                            <span class="action-chip" onclick="window.triggerQuickAction('faq')">❓ FAQ</span>
+                        </div>
+
                         <div id="chat-messages">
+                            <!-- Helper / Introduction -->
+                            <div class="message-row bot-msg">
+                                <div class="message-bubble">
+                                    いらっしゃいませ！ Miryu Burgerへようこそ！<br><br>
+                                    何かお手伝いできることはありますか？<br>
+                                    （例：「おすすめのメニューは？」「営業時間は？」）
+                                </div>
+                            </div>
                         </div>
+                        
                         <div class="input-area">
                             <button id="stt-btn" title="音声入力">
                                 <svg class="icon-line" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
