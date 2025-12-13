@@ -1541,7 +1541,6 @@
                         <div class="quick-actions" id="quick-actions">
                             <span class="action-chip" onclick="window.triggerQuickAction('reservation')">📅 来店予約</span>
                             <span class="action-chip" onclick="window.triggerQuickAction('recommend')">🍔 おすすめ</span>
-                            <span class="action-chip" onclick="window.triggerQuickAction('faq')">❓ FAQ</span>
                         </div>
 
                         <div id="chat-messages">
@@ -2155,8 +2154,6 @@
                         // Fallback
                         addMessage("おすすめのメニューですね！\n申し訳ありません、現在メニュー情報を取得できませんでした。", 'bot');
                     }
-                } else if (action === 'faq') {
-                    addMessage("よくあるご質問ですね。何について知りたいですか？", 'bot');
                 }
             };
 
