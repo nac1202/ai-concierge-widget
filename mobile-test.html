@@ -1462,6 +1462,30 @@
 
         const WIDGET_STYLES = `
 
+            /* Header Layout Fix */
+            .chat-header {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0 12px !important;
+                height: 48px !important;
+                background: linear-gradient(180deg, color-mix(in srgb, var(--widget-theme-color), white 25%) 0%, var(--widget-theme-color) 100%);
+            }
+            .header-left {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                flex-shrink: 0 !important;
+            }
+            .header-controls {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: flex-end !important;
+                gap: 10px !important;
+                flex-shrink: 0 !important;
+                margin-left: auto !important;
+            }
+            .header-spacer { display: none !important; }
 
             /* Quick Actions */
             .quick-actions {
