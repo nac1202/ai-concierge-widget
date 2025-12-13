@@ -1613,11 +1613,7 @@
                         <div id="chat-messages">
                             <!-- Helper / Introduction -->
                             <div class="message-row bot-msg">
-                                <div class="message-bubble">
-                                    いらっしゃいませ！ Miryu Burgerへようこそ！<br><br>
-                                    何かお手伝いできることはありますか？<br>
-                                    （例：「おすすめのメニューは？」「営業時間は？」）
-                                </div>
+        
                             </div>
                         </div>
                         
@@ -1655,6 +1651,7 @@
         `;
 
         window.initConciergeWidget = function (options) {
+            console.log("Cleaning DOM text content...");
             // Widget Injection
             const widgetDiv = document.createElement('div');
             widgetDiv.id = 'ai-widget';
@@ -2150,9 +2147,7 @@
                 return fragment;
             }
 
-            function getInitialMessage(siteName) {
-                return `こんにちは！\n${siteName || "このサイト"}のAIコンシェルジュです。\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」「営業時間は？」）`;
-            }
+
 
             // DOM-based Context Collection (For Prompt)
             function collectPageMenuContext() {
@@ -2750,9 +2745,13 @@
                 }
             });
 
-            // Send Initial Message
-            const initialMsg = getInitialMessage(options.siteName);
-            addMessage(initialMsg, "bot");
+            // Ensure clean state (Wipe any static/ghost messages)
+            chatMessages.innerHTML = "";
+            // Clear potential legacy history
+            localStorage.removeItem("chatHistory");
+
+            const welcomeMsg = `いらっしゃいませ！ ${options.siteName}へようこそ！\n\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」）`;
+            addMessage(welcomeMsg, "bot");
         };
 
         window.initConciergeWidget({

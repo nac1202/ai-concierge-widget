@@ -1550,11 +1550,7 @@
                         <div id="chat-messages">
                             <!-- Helper / Introduction -->
                             <div class="message-row bot-msg">
-                                <div class="message-bubble">
-                                    いらっしゃいませ！ Miryu Burgerへようこそ！<br><br>
-                                    何かお手伝いできることはありますか？<br>
-                                    （例：「おすすめのメニューは？」「営業時間は？」）
-                                </div>
+    
                             </div>
                         </div>
                         
@@ -1592,6 +1588,7 @@
         `;
 
         window.initConciergeWidget = function (options) {
+            console.log("Cleaning DOM text content...");
             // Widget Injection
             const widgetDiv = document.createElement('div');
             widgetDiv.id = 'ai-widget';
@@ -2087,9 +2084,7 @@
                 return fragment;
             }
 
-            function getInitialMessage(siteName) {
-                return `こんにちは！\n${siteName || "このサイト"}のAIコンシェルジュです。\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」「営業時間は？」）`;
-            }
+
 
             // DOM-based Context Collection (For Prompt)
             function collectPageMenuContext() {
@@ -2693,10 +2688,20 @@
                 }
             });
 
-            // Send Initial Message
-            const initialMsg = getInitialMessage(options.siteName);
-            addMessage(initialMsg, "bot");
+            // Ensure clean state (Wipe any static/ghost messages)
+            chatMessages.innerHTML = "";
+            // Clear potential legacy history
+            localStorage.removeItem("chatHistory");
+
+            const welcomeMsg = `いらっしゃいませ！ ${options.siteName}へようこそ！\n\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」）`;
+            addMessage(welcomeMsg, "bot");
         };
+
+        // Remove separate getInitialMessage function if it exists below (It was defined above, so we just remove the call here. 
+        // We will remove the definition in a separate step or just assume this replaces the call block effectively.
+        // Wait, the function definition is at line 2021. This replace only targets the CALL SITE at the end.
+        // I need to use multi_replace to do both or just ignore the dead function for now.
+        // Let's do multi_replace to be clean.
 
         window.initConciergeWidget({
             siteName: "Miryu Burger Demo",
