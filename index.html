@@ -1388,6 +1388,65 @@
     ================================================================
     -->
     <script>
+        // --- CONFIGURATION ---
+        const WIDGET_CONFIG = {
+            brandName: "Miryu Burger", // Default, will be overwritten by auto-detect if needed? No, auto-detect is color.
+            hours: { open: 11, close: 22, lo: "21:30" },
+            messages: {
+                offHours: "申し訳ありません。現在は営業時間外（11:00〜22:00）のため、予約リクエストの受付のみ承ります。翌営業日にスタッフより確認のご連絡を差し上げます。",
+                reservationSuccess: "ご予約リクエストを承りました。\n※これはデモ画面です。実際の予約は確定していません。"
+            }
+        };
+
+        const WIDGET_STYLES = `
+            /* ... existing styles ... */
+            /* Quick Actions */
+            .quick-actions {
+                display: flex;
+                gap: 8px;
+                padding: 10px;
+                overflow-x: auto;
+                white-space: nowrap;
+                border-bottom: 1px solid #eee;
+                background: #f9f9f9;
+                flex-shrink: 0;
+            }
+            .action-chip {
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 16px;
+                padding: 4px 12px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                color: #333;
+                user-select: none;
+            }
+            .action-chip:hover {
+                background: var(--widget-theme-color);
+                color: white;
+                border-color: var(--widget-theme-color);
+            }
+            /* Reservation Form inside Chat */
+            .reservation-form {
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 15px;
+                margin-top: 8px;
+                width: 100%;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            }
+            .res-input-group { margin-bottom: 10px; }
+            .res-label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; }
+            .res-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+            .res-submit {
+                width: 100%; padding: 10px; background: var(--widget-theme-color); color: white;
+                border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 5px;
+            }
+            .demo-badge { text-align: center; font-size: 10px; color: #999; margin-top: 8px; }
+        `;
+
         const WIDGET_HTML = `
             <div class="assistant-portrait" id="assistant-avatar">
                 <img src="assistant.png" alt="AIコンシェルジュ">
@@ -1398,28 +1457,10 @@
                         <div class="chat-header">
                             <div class="header-left">
                                 <span class="header-icon-brand" title="AIコンシェルジュ">
-                                    <!-- Minimal Robot: Rect Head (rx=8), Circle Eyes, Line+Circle Antenna -->
-                                    <svg class="icon-brand" viewBox="0 0 24 24">
-                                        <rect x="3" y="6" width="18" height="15" rx="8" ry="8" />
-                                        <circle cx="9" cy="12" r="1.5" />
-                                        <circle cx="15" cy="12" r="1.5" />
-                                        <line x1="12" y1="6" x2="12" y2="3" />
-                                        <circle cx="12" cy="2" r="1.5" />
-                                    </svg>
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
                                 </span>
                                 <span class="header-title">Concierge</span>
                             </div>
-                            <div class="header-spacer"></div>
-                            <div class="header-right">
-                                <button id="theme-btn" class="header-btn" title="テーマカラー変更">
-                                    <svg class="icon-line" viewBox="0 0 24 24"><path d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10z"/><circle cx="8" cy="7" r="1.5"/><circle cx="16" cy="7" r="1.5"/><circle cx="8" cy="17" r="1.5"/></svg>
-                                </button>
-                                <button id="opacity-toggle" class="header-btn" title="透明度切り替え">
-                                    <svg class="icon-line" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                                <button id="avatar-toggle" class="header-btn" title="キャラクター表示切り替え">
-                                    <svg class="icon-line" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/></svg>
-                                </button>
                                 <button id="tts-toggle" class="header-btn" title="音声オン/オフ">
                                     <svg class="icon-line" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                                 </button>
@@ -1480,6 +1521,11 @@
             widgetDiv.innerHTML = WIDGET_HTML;
             document.body.appendChild(widgetDiv);
 
+            // Inject Styles
+            const styleTag = document.createElement('style');
+            styleTag.textContent = WIDGET_STYLES;
+            document.head.appendChild(styleTag);
+
             // Auto-detect Brand Color
             function autoDetectBrandColor() {
                 // 1. Try CSS Variable --primary-color from the parent document
@@ -1504,6 +1550,93 @@
             if (initialColor) {
                 document.documentElement.style.setProperty('--widget-theme-color', initialColor);
             }
+
+            // --- Business Logic ---
+            function checkBusinessHours() {
+                const now = new Date();
+                // Assumes client is in correct timezone or uses local time for demo
+                const currentHour = now.getHours();
+                const currentMin = now.getMinutes();
+                const { open, close } = WIDGET_CONFIG.hours;
+
+                // Simple check: open <= current < close
+                // (Ignoring minutes for simplicity unless strictly needed)
+                if (currentHour >= open && currentHour < close) {
+                    return true;
+                }
+                return false;
+            }
+
+            // Quick Actions
+            window.triggerQuickAction = function (action) {
+                if (action === 'reservation') {
+                    if (checkBusinessHours()) {
+                        renderReservationForm();
+                    } else {
+                        addMessage(WIDGET_CONFIG.messages.offHours, 'bot');
+                    }
+                } else if (action === 'recommend') {
+                    addMessage("おすすめのメニューですね！こちらはいかがでしょうか？", 'bot');
+                    // In a real app, this would trigger a specific prompt to AI
+                    handleChat("おすすめを教えて");
+                } else if (action === 'faq') {
+                    addMessage("よくあるご質問ですね。何について知りたいですか？", 'bot');
+                }
+            };
+
+            function renderReservationForm() {
+                const formHtml = `
+                    <div class="reservation-form">
+                        <div class="res-input-group">
+                            <label class="res-label">来店日</label>
+                            <input type="date" class="res-input" id="res-date">
+                        </div>
+                        <div class="res-input-group">
+                            <label class="res-label">時間</label>
+                            <select class="res-input" id="res-time">
+                                <option>11:00</option><option>12:00</option><option>13:00</option>
+                                <option>18:00</option><option>19:00</option><option>20:00</option>
+                            </select>
+                        </div>
+                        <div class="res-input-group">
+                            <label class="res-label">人数</label>
+                            <select class="res-input" id="res-pax">
+                                <option>1名</option><option>2名</option><option>3名</option><option>4名</option>
+                            </select>
+                        </div>
+                        <div class="res-input-group">
+                            <label class="res-label">お名前</label>
+                            <input type="text" class="res-input" id="res-name" placeholder="例：田中 太郎">
+                        </div>
+                        <button class="res-submit" onclick="window.submitReservation()">予約リクエストを送信</button>
+                        <div class="demo-badge">※デモ機能です</div>
+                    </div>
+                `;
+                addMessage("ご来店予約ですね。以下のフォームに入力をお願いします。", 'bot');
+                const chatMessages = document.getElementById("chat-messages");
+                // Create a container for the form
+                const div = document.createElement("div");
+                div.innerHTML = formHtml;
+                chatMessages.appendChild(div);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            window.submitReservation = function () {
+                // Validate?
+                const date = document.getElementById("res-date").value;
+                const name = document.getElementById("res-name").value;
+                if (!date || !name) {
+                    alert("日付とお名前を入力してください");
+                    return;
+                }
+
+                // Remove Form (simplify: just hide or replace text)
+                const inputs = document.querySelectorAll(".reservation-form input, .reservation-form select, .reservation-form button");
+                inputs.forEach(el => el.disabled = true);
+
+                // Success Message
+                addMessage(WIDGET_CONFIG.messages.reservationSuccess, 'bot');
+            };
 
             // --- Elements ---
             const aiWidget = document.getElementById("ai-widget");
@@ -1577,12 +1710,12 @@
 
 ────────────
 【運用設定】
-・ブランド／店舗名：Miryu Burger（ミリューバーガー）
+・ブランド／店舗名：${WIDGET_CONFIG.brandName}
 ・タイムゾーン：Asia/Tokyo
 ・現在時刻：{{CURRENT_TIME_PLACEHOLDER}}
 
 ■ 有人対応（人が対応する業務）
-・有人対応時間：11:00 〜 22:00
+・有人対応時間：${WIDGET_CONFIG.hours.open}:00 〜 ${WIDGET_CONFIG.hours.close}:00
 ・休業日：なし
 ・対応チャネル：店舗・電話（03-1234-5678）
 
@@ -1590,23 +1723,19 @@
 ・オンライン対応モード：24H
   - 24H：24時間対応可能
 ・オンライン対応時間（LIMITED時）：-
-・オンラインで可能なこと：商品案内／FAQ回答／おしゃべり
-・オンラインで不可なこと：実際の注文処理（カート機能未実装のため）／席予約
+・オンラインで可能なこと：商品案内／FAQ回答／おしゃべり／**来店予約リクエスト受付**
+・オンラインで不可なこと：実際の注文決済（カート機能未実装のため）
 
 ────────────
 【重要ルール】
 
-1. まず「今できること」と「今できないこと」を判断してください。
+1. 「来店予約」に関しては、「チャット画面上の【来店予約】ボタン、またはメニューからご予約いただけます」と案内してください。
+   ※ あなた自身が予約を受け付けるのではなく、フォームへの入力を促してください。
 2. 有人対応時間外でも、オンライン対応が24Hの場合は
    ・商品やサービスの案内
-   是継続して行って構いません。
-3. 有人対応が必要な依頼（電話したい／スタッフに相談したい等）は、
-   有人対応時間外の場合、
-   ・現在は対応できない理由
-   ・対応可能な時間
-   ・代替手段（翌営業日案内など）
-   を必ずセットで案内してください。
-4. できないことは、ただ断るのではなく
+   ・**予約リクエストの受付**
+   は継続して行って構いません。
+3. できないことは、ただ断るのではなく
    「次に取れる行動」を必ず提示してください。
 
 ────────────
@@ -1630,7 +1759,7 @@
 
 ・丁寧で親しみやすい
 ・結論 → 理由 → 次の行動 の順で簡潔に
-・ハンバーガーショップの店員らしい自然な接客口調
+・汎用的な店舗スタッフらしい自然な接客口調
 ・絵文字は控えめに使用してOK
 
 ────────────
