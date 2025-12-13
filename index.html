@@ -1481,7 +1481,13 @@
                         <div class="chat-header">
                             <div class="header-left">
                                 <span class="header-icon-brand" title="AIコンシェルジュ">
-                                    <svg viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2px;"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                                    <svg viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2px; stroke-linecap:round; stroke-linejoin:round;">
+                                        <rect x="3" y="11" width="18" height="10" rx="2" />
+                                        <circle cx="12" cy="5" r="2" />
+                                        <path d="M12 7v4" />
+                                        <line x1="8" y1="16" x2="8" y2="16" />
+                                        <line x1="16" y1="16" x2="16" y2="16" />
+                                    </svg>
                                 </span>
                                 <span class="header-title">Concierge</span>
                             </div>
@@ -1493,7 +1499,7 @@
                                     <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                                 <button class="header-btn" id="avatar-toggle" title="アバター表示切替">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8" y2="16" /><line x1="16" y1="16" x2="16" y2="16" /></svg>
                                 </button>
                                 <button class="header-btn" id="tts-toggle" title="音声読み上げ">
                                     <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
@@ -2346,12 +2352,17 @@
                 if (isAvatarVisible) {
                     assistantAvatar.style.display = "flex";
                     chatWindow.classList.remove("no-avatar");
-                    svg.innerHTML = '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><circle cx="9" cy="9" r="1.5"/><circle cx="15" cy="9" r="1.5"/>';
+                    svg.innerHTML = '<rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8" y2="16" /><line x1="16" y1="16" x2="16" y2="16" />';
                 }
                 else {
                     assistantAvatar.style.display = "none";
                     chatWindow.classList.add("no-avatar");
-                    svg.innerHTML = '<circle cx="12" cy="12" r="9"/><line x1="5" y1="5" x2="19" y2="19"/>'; // Disabled icon
+                    svg.innerHTML = '<rect x="3" y="11" width="18" height="10" rx="2" /><line x1="5" y1="5" x2="19" y2="19"/>'; // Disabled icon (Slash?) or just robot with slash?
+                    // Let's use a simple slash over the robot or just a "Closed Eye" robot?
+                    // Original was Face with Line across.
+                    // Let's use Robot with Line check? Or just the Robot code + slash.
+                    // svg.innerHTML = '<rect x="3" y="11" width="18" height="10" rx="2" /><line x1="5" y1="5" x2="19" y2="19"/>'; 
+                    // This draws a Rect and a huge Slash. Acceptable.
                 }
             });
 
