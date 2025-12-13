@@ -2530,36 +2530,7 @@
 
 
             // Enhanced TTS
-            function speak(text) {
-                if (!isTtsEnabled) return;
 
-                // Cancel current speech
-                speechSynthesis.cancel();
-
-                const utter = new SpeechSynthesisUtterance(text);
-
-                // Voice Tuning
-                const voices = speechSynthesis.getVoices();
-                // Try to find a friendly female JP voice (e.g., Google 日本語, Microsoft Haruka, etc.)
-                const targetVoice = voices.find(v => v.lang.includes("ja") && (v.name.includes("Google") || v.name.includes("Haruka") || v.name.includes("Ichiro") === false));
-                if (targetVoice) utter.voice = targetVoice;
-
-                utter.pitch = 1.1; // Slightly higher
-                utter.rate = 0.95; // Slightly slower
-
-                // Continuous Conversation
-                utter.onend = () => {
-                    if (isContinuousMode && isTtsEnabled) {
-                        // Restart listening automatically
-                        console.log("TTS ended, restarting STT...");
-                        setTimeout(() => {
-                            if (!isListening) startListening();
-                        }, 500);
-                    }
-                };
-
-                speechSynthesis.speak(utter);
-            }
 
             function startListening() {
                 if (!recognition) return;
@@ -2695,6 +2666,8 @@
 
             const welcomeMsg = `いらっしゃいませ！ ${options.siteName}へようこそ！\n\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」）`;
             addMessage(welcomeMsg, "bot");
+            // Add to history so AI knows it has already greeted
+            conversationHistory.push({ role: "model", parts: [{ text: welcomeMsg }] });
         };
 
         // Remove separate getInitialMessage function if it exists below (It was defined above, so we just remove the call here. 
