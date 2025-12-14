@@ -1342,7 +1342,7 @@ footer {
     background: none;
     border: none;
     color: white;
-    padding: 8px;
+    padding: 6px;
     cursor: pointer;
     border-radius: 50%;
     display: flex;
@@ -1350,9 +1350,9 @@ footer {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
-    width: 36px;
+    width: 32px;
     /* Default width */
-    height: 36px;
+    height: 32px;
     /* Default height */
     box-sizing: border-box;
     /* Include padding in width */
@@ -1365,12 +1365,12 @@ footer {
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 4px;
 }
 
 #close-chat {
-    margin-left: 12px !important;
-    padding-left: 16px !important;
+    margin-left: 6px !important;
+    padding-left: 10px !important;
     border-left: 1px solid rgba(255, 255, 255, 0.4) !important;
     border-radius: 0 !important;
     width: auto !important;
