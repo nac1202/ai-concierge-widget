@@ -383,17 +383,14 @@ window.initConciergeWidget = function (options) {
     const colorPopup = document.getElementById("color-popup");
     const opacityToggle = document.getElementById("opacity-toggle");
     const avatarToggle = document.getElementById("avatar-toggle");
-    const ttsToggle = document.getElementById("tts-toggle");
     const chatMessages = document.getElementById("chat-messages");
     // State
     // --- State ---
     let isAvatarVisible = true;
     let isTransparent = false;
-    let isTtsEnabled = false;
-    let isListening = false;
+    // Removed redundant declarations (isTtsEnabled, isListening, recognition) - Defined later
     let isContinuousMode = true; // Default to continuous mode for voice
     let lastMentionedProduct = ""; // Context for demonstratives
-    let recognition = null;
     let conversationHistory = [];
 
     // --- DYNAMIC SYSTEM PROMPT ---
@@ -1149,6 +1146,12 @@ ${langInstruction}
         return cleaned;
     }
 
+    // --- UI/Logic ---
+    let isListening = false;
+    let recognition;
+    let isTtsEnabled = false; // Default to FALSE to force user interaction/unlock
+    const ttsToggle = document.getElementById("tts-toggle");
+
     // Enhanced TTS
     // --- Enhanced TTS (Robust) ---
     let availableVoices = [];
@@ -1165,9 +1168,6 @@ ${langInstruction}
     loadVoices(); // Try immediately too
 
     function speak(text) {
-        // Debug: Check entry
-        alert("Speak called: " + text.substring(0, 10) + " / Enabled: " + isTtsEnabled);
-
         if (!isTtsEnabled) return;
 
         // Cancel current speech
@@ -1178,9 +1178,6 @@ ${langInstruction}
         // Voice Tuning - Robust Selection
         if (availableVoices.length === 0) loadVoices();
 
-        // Debug: Voice availability
-        alert("Voices available: " + availableVoices.length);
-
         // Priority: Google JP -> Microsoft Haruka -> iOS/Mac Default -> Any JP
         const targetVoice = availableVoices.find(v => v.lang === "ja-JP" && v.name.includes("Google")) ||
             availableVoices.find(v => v.name.includes("Haruka")) ||
@@ -1188,9 +1185,6 @@ ${langInstruction}
 
         if (targetVoice) {
             utter.voice = targetVoice;
-            alert("Using voice: " + targetVoice.name);
-        } else {
-            alert("No JP Voice Found! Langs: " + availableVoices.map(v => v.lang).join(","));
         }
 
         utter.pitch = 1.0;
@@ -1211,20 +1205,17 @@ ${langInstruction}
 
         utter.onerror = (e) => {
             console.error("TTS Error:", e);
-            alert("TTS Error Event: " + e.error);
         };
 
         try {
             speechSynthesis.speak(utter);
         } catch (e) {
-            alert("TTS Exception: " + e.message);
+            console.error("TTS Exception:", e);
         }
     }
 
     ttsToggle.addEventListener("click", () => {
         isTtsEnabled = !isTtsEnabled;
-
-        alert("TTS Toggle: " + isTtsEnabled + "\nVoices: " + availableVoices.length);
 
         if (isTtsEnabled) {
             ttsToggle.classList.add("active");
