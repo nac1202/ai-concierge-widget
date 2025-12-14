@@ -1,13 +1,27 @@
 
 // --- CONFIGURATION ---
-const WIDGET_CONFIG = {
-    brandName: "Miryu Burger", // Default, will be overwritten by auto-detect if needed? No, auto-detect is color.
-    hours: { open: 11, close: 22, lo: "21:30" },
+// --- DEFAULT CONFIGURATION ---
+const DEFAULT_CONFIG = {
+    brandName: "AI Concierge",
+    themeColor: "#4169e1",
+    businessType: "generic", // restaurant, retail, salon, generic
+    hours: { open: 9, close: 18 },
+    selectors: {
+        productCard: ".product-card",
+        productName: ".product-title",
+        productDesc: ".product-description",
+        productPrice: ".product-price",
+        productImage: "img",
+        productTags: ".product-tags li"
+    },
     messages: {
-        offHours: "申し訳ありません。現在は営業時間外（11:00〜22:00）のため、予約リクエストの受付のみ承ります。翌営業日にスタッフより確認のご連絡を差し上げます。",
-        reservationSuccess: "ご予約リクエストを承りました。\n※これはデモ画面です。実際の予約は確定していません。"
+        offHours: "現在営業時間外です。ご用件を承ります。",
+        reservationSuccess: "予約リクエストを受け付けました。"
     }
 };
+
+// Will be populated in initConciergeWidget
+let WIDGET_CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
 const WIDGET_HTML = `
     <div class="assistant-portrait" id="assistant-avatar">
@@ -102,6 +116,18 @@ const WIDGET_HTML = `
 `;
 
 window.initConciergeWidget = function (options) {
+    // Merge User Config
+    if (options) {
+        // Deep merge helper or simple assign for minimal keys
+        if (options.siteName) WIDGET_CONFIG.brandName = options.siteName;
+        if (options.brandName) WIDGET_CONFIG.brandName = options.brandName; // Handle both
+        if (options.businessType) WIDGET_CONFIG.businessType = options.businessType;
+        if (options.hours) WIDGET_CONFIG.hours = { ...WIDGET_CONFIG.hours, ...options.hours };
+        if (options.selectors) WIDGET_CONFIG.selectors = { ...WIDGET_CONFIG.selectors, ...options.selectors };
+
+        // Handle themeColor from options if provided (before auto-detect)
+        if (options.themeColor) WIDGET_CONFIG.themeColor = options.themeColor;
+    }
     console.log("Cleaning DOM text content...");
     // Widget Injection
     const widgetDiv = document.createElement('div');
@@ -284,8 +310,9 @@ window.initConciergeWidget = function (options) {
     let recognition = null;
     let conversationHistory = [];
 
-    // --- SYSTEM PROMPT (Enhanced Persona) ---
-    const SYSTEM_PROMPT = `
+    // --- DYNAMIC SYSTEM PROMPT ---
+    function generateSystemPrompt(cfg) {
+        return `
 あなたは、企業・店舗の公式Webサイトに設置された
 「AIコンシェルジュ」です。
 
@@ -300,12 +327,12 @@ window.initConciergeWidget = function (options) {
 
 ────────────
 【運用設定】
-・ブランド／店舗名：${WIDGET_CONFIG.brandName}
+・ブランド／店舗名：${cfg.brandName}
 ・タイムゾーン：Asia/Tokyo
 ・現在時刻：{{CURRENT_TIME_PLACEHOLDER}}
 
 ■ 有人対応（人が対応する業務）
-・有人対応時間：${WIDGET_CONFIG.hours.open}:00 〜 ${WIDGET_CONFIG.hours.close}:00
+・有人対応時間：${cfg.hours.open}:00 〜 ${cfg.hours.close}:00
 ・休業日：なし
 ・対応チャネル：店舗・電話（03-1234-5678）
 
@@ -457,6 +484,7 @@ window.initConciergeWidget = function (options) {
 - 分からないこと、ページ情報にないことは正直に「確認できません」と伝えて構いません。
 - あなたの最優先の役割は、「このページ上のメニューを、その人に合った形で気持ちよく案内する」ことです。
 `;
+    }
 
     // --- User Profile Logic ---
     let userId = "";
@@ -536,17 +564,23 @@ window.initConciergeWidget = function (options) {
     // Helper: Build Product Registry from DOM
     function buildProductRegistry() {
         const registry = {};
-        // Scan existing menu cards to build a lookup
-        document.querySelectorAll(".menu-card").forEach((card, index) => {
-            const title = card.querySelector(".menu-title")?.textContent.trim() || "";
-            const desc = card.querySelector(".menu-description")?.textContent.trim() || "";
-            const price = card.querySelector(".menu-price")?.textContent.trim() || "";
-            const img = card.querySelector("img")?.getAttribute("src") || "";
-            // Basic ID generation if not present
-            const id = `menu_${index + 1}`;
-            const tags = Array.from(card.querySelectorAll(".menu-tags li")).map(li => li.textContent.trim());
+        const sel = WIDGET_CONFIG.selectors;
 
-            if (id) {
+        // Scan existing product cards to build a lookup
+        document.querySelectorAll(sel.productCard).forEach((card, index) => {
+            const title = card.querySelector(sel.productName)?.textContent.trim() || "";
+            const desc = card.querySelector(sel.productDesc)?.textContent.trim() || "";
+            const price = card.querySelector(sel.productPrice)?.textContent.trim() || "";
+            const img = card.querySelector(sel.productImage)?.getAttribute("src") || "";
+            // Basic ID generation if not present
+            const id = `item_${index + 1}`;
+
+            let tags = [];
+            if (sel.productTags) {
+                tags = Array.from(card.querySelectorAll(sel.productTags)).map(li => li.textContent.trim());
+            }
+
+            if (id && title) {
                 registry[id] = {
                     id,
                     name: title,
@@ -604,18 +638,19 @@ window.initConciergeWidget = function (options) {
 
     // DOM-based Context Collection (For Prompt)
     function collectPageMenuContext() {
-        const cards = document.querySelectorAll("[data-menu-card]");
+        const sel = WIDGET_CONFIG.selectors;
+        const cards = document.querySelectorAll(sel.productCard);
         // Note: We might want to run even if no menu cards, but current logic returns null.
         // Let's allow partial context.
 
         const items = Array.from(cards).map((card, index) => {
-            const titleEl = card.querySelector(".menu-title");
-            const descEl = card.querySelector(".menu-description");
-            const priceEl = card.querySelector(".menu-price");
-            const imgEl = card.querySelector("img");
+            const titleEl = card.querySelector(sel.productName);
+            const descEl = card.querySelector(sel.productDesc);
+            const priceEl = card.querySelector(sel.productPrice);
+            const imgEl = card.querySelector(sel.productImage);
 
             return {
-                id: `menu_${index + 1}`,
+                id: `item_${index + 1}`,
                 name: titleEl ? titleEl.textContent.trim() : "",
                 description: descEl ? descEl.textContent.trim() : "",
                 price: priceEl ? priceEl.textContent.trim() : "",
@@ -673,7 +708,7 @@ window.initConciergeWidget = function (options) {
     // API Call
     // API Call (Via Vercel Serverless Function)
     async function callGeminiAPI(history, imageBase64 = null) {
-        let dynamicPrompt = SYSTEM_PROMPT;
+        let dynamicPrompt = generateSystemPrompt(WIDGET_CONFIG);
 
         const lastUserMessage = history.length > 0 ? history[history.length - 1].parts[0].text : "";
         const hasUrl = /https?:\/\//.test(lastUserMessage);
@@ -1162,10 +1197,6 @@ window.initConciergeWidget = function (options) {
 };
 
 
-document.addEventListener("DOMContentLoaded", () => {
-    window.initConciergeWidget({
-        siteName: "Miryu Burger Demo",
-        primaryColor: "#4169e1",
-        position: "bottom-right"
-    });
-});
+// Default Init for Demo (Optional) or remove entirely if end-user is expected to init.
+// For now, we leave it commented out or empty, expecting the HTML to call it.
+// document.addEventListener("DOMContentLoaded", () => { window.initConciergeWidget(); });
