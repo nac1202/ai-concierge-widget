@@ -416,21 +416,19 @@ footer {
         top: 0 !important;
         left: 0 !important;
         width: 100% !important;
-        height: 100% !important;
-        /* Full screen */
+        height: 100dvh !important;
+        /* Use dynamic viewport height */
         border-radius: 0 !important;
         margin: 0 !important;
         max-width: none !important;
         z-index: 20000;
         display: none;
-        /* default hidden */
         flex-direction: column;
 
         /* Safe Area for modern phones */
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         background-color: rgba(255, 255, 255, 0.95);
-        /* Nearly opaque background */
         backdrop-filter: blur(10px);
     }
 
@@ -1261,12 +1259,14 @@ footer {
     height: 48px !important;
     background: linear-gradient(180deg, color-mix(in srgb, var(--widget-theme-color), white 25%) 0%, var(--widget-theme-color) 100%);
 }
+
 .header-left {
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
     flex-shrink: 0 !important;
 }
+
 .header-controls {
     display: flex !important;
     align-items: center !important;
@@ -1275,7 +1275,10 @@ footer {
     flex-shrink: 0 !important;
     margin-left: auto !important;
 }
-.header-spacer { display: none !important; }
+
+.header-spacer {
+    display: none !important;
+}
 
 .quick-actions {
     display: flex;
@@ -1287,6 +1290,7 @@ footer {
     background: #f9f9f9;
     flex-shrink: 0;
 }
+
 .action-chip {
     background: #fff;
     border: 1px solid #ddd;
@@ -1301,23 +1305,27 @@ footer {
     align-items: center;
     gap: 4px;
 }
+
 .action-chip:hover {
     background: var(--widget-theme-color);
     color: white;
     border-color: var(--widget-theme-color);
 }
+
 .action-chip svg {
-    width: 14px; 
+    width: 14px;
     height: 14px;
     stroke-width: 2;
     stroke: currentColor;
     fill: none;
 }
+
 .header-controls {
     display: flex;
     align-items: center;
     gap: 5px;
 }
+
 .header-btn svg {
     width: 20px;
     height: 20px;
@@ -1327,6 +1335,7 @@ footer {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
+
 /* Reservation Form inside Chat */
 .reservation-form {
     background: #fff;
@@ -1335,13 +1344,44 @@ footer {
     padding: 15px;
     margin-top: 8px;
     width: 100%;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
-.res-input-group { margin-bottom: 10px; }
-.res-label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; }
-.res-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+
+.res-input-group {
+    margin-bottom: 10px;
+}
+
+.res-label {
+    display: block;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.res-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
 .res-submit {
-    width: 100%; padding: 10px; background: var(--widget-theme-color); color: white;
-    border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 5px;
+    width: 100%;
+    padding: 10px;
+    background: var(--widget-theme-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 5px;
 }
-.demo-badge { text-align: center; font-size: 10px; color: #999; margin-top: 8px; }
+
+.demo-badge {
+    text-align: center;
+    font-size: 10px;
+    color: #999;
+    margin-top: 8px;
+}
