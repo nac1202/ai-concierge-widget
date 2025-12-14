@@ -973,8 +973,8 @@ ${langInstruction}
         if (!text) return;
 
         // --- SILENT PRIME FOR MOBILE TTS ---
-        // Crucial for iOS/Android: "Unlock" the synthesis engine immediately on user gesture.
-        // Even an empty string keeps the session active or at least flushes the pending state.
+        // (Disabled per user request to cut TTS feature)
+        /*
         if (isTtsEnabled) {
             console.log("TTS: priming engine with empty string");
             speechSynthesis.cancel();
@@ -982,6 +982,7 @@ ${langInstruction}
             silent.volume = 0; // Silent
             speechSynthesis.speak(silent);
         }
+        */
 
         // Handle Reset Command
         if (text.includes("記憶をリセット") || text.includes("記憶を消して") || text.includes("忘れて")) {
@@ -1293,22 +1294,12 @@ ${langInstruction}
         }
     }
 
+    ttsToggle.style.display = "none"; // Hide TTS Toggle per user request
+    isTtsEnabled = false;
+
+    // Disabled TTS Toggle
     ttsToggle.onclick = () => {
-        console.log("TTS Toggle Clicked. Current state:", isTtsEnabled);
-        isTtsEnabled = !isTtsEnabled;
-        console.log("TTS Toggled to:", isTtsEnabled);
-
-        if (isTtsEnabled) {
-            ttsToggle.classList.add("active");
-
-            // UNLOCK & CONFIRM: Speak immediately on user gesture
-            // This is critical for mobile browsers.
-            speak("音声をオンにしました。");
-
-        } else {
-            ttsToggle.classList.remove("active");
-            speechSynthesis.cancel();
-        }
+        console.log("TTS Toggle is disabled by configuration.");
     };
 
 
