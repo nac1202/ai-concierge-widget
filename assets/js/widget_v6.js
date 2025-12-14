@@ -384,11 +384,18 @@ window.initConciergeWidget = function (options) {
     const opacityToggle = document.getElementById("opacity-toggle");
     const avatarToggle = document.getElementById("avatar-toggle");
     const chatMessages = document.getElementById("chat-messages");
-    // State
+
+    // --- Hoisted Definitions (Fix ReferenceError) ---
+    const ttsToggle = document.getElementById("tts-toggle");
+    const sttButton = document.getElementById("stt-btn");
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
     // --- State ---
     let isAvatarVisible = true;
     let isTransparent = false;
-    // Removed redundant declarations (isTtsEnabled, isListening, recognition) - Defined later
+    let isListening = false;
+    let recognition;
+    let isTtsEnabled = false; // Default to FALSE to force user interaction/unlock
     let isContinuousMode = true; // Default to continuous mode for voice
     let lastMentionedProduct = ""; // Context for demonstratives
     let conversationHistory = [];
@@ -1184,10 +1191,7 @@ ${langInstruction}
     }
 
     // --- UI/Logic ---
-    let isListening = false;
-    let recognition;
-    let isTtsEnabled = false; // Default to FALSE to force user interaction/unlock
-    const ttsToggle = document.getElementById("tts-toggle");
+    // Variables hoisted to top
 
     // Enhanced TTS
     // --- Enhanced TTS (Robust) ---
@@ -1309,8 +1313,7 @@ ${langInstruction}
     }
 
     // --- STT Logic (Robust with Debug) ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const sttButton = document.getElementById("stt-btn");
+    // Variables hoisted to top
 
     if (SpeechRecognition) {
         // Debug: Support confirmed
