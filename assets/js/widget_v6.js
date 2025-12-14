@@ -967,6 +967,17 @@ ${langInstruction}
         const text = chatInput.value.trim();
         if (!text) return;
 
+        // --- SILENT PRIME FOR MOBILE TTS ---
+        // Crucial for iOS/Android: "Unlock" the synthesis engine immediately on user gesture.
+        // Even an empty string keeps the session active or at least flushes the pending state.
+        if (isTtsEnabled) {
+            console.log("TTS: priming engine with empty string");
+            speechSynthesis.cancel();
+            const silent = new SpeechSynthesisUtterance(" ");
+            silent.volume = 0; // Silent
+            speechSynthesis.speak(silent);
+        }
+
         // Handle Reset Command
         if (text.includes("記憶をリセット") || text.includes("記憶を消して") || text.includes("忘れて")) {
             resetUserProfile();
@@ -1228,9 +1239,15 @@ ${langInstruction}
         if (availableVoices.length === 0) loadVoices();
 
         // Priority: Google JP -> Microsoft Haruka -> iOS/Mac Default -> Any JP
-        const targetVoice = availableVoices.find(v => v.lang === "ja-JP" && v.name.includes("Google")) ||
+        let targetVoice = availableVoices.find(v => v.lang === "ja-JP" && v.name.includes("Google")) ||
             availableVoices.find(v => v.name.includes("Haruka")) ||
             availableVoices.find(v => v.lang.includes("ja"));
+
+        // FALLBACK: If no JP voice, try ANY local voice, or just the first one.
+        if (!targetVoice && availableVoices.length > 0) {
+            console.warn("TTS: No Japanese voice found. using first available.");
+            targetVoice = availableVoices[0];
+        }
 
         if (targetVoice) {
             utter.voice = targetVoice;
