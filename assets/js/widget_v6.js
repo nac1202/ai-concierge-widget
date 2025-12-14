@@ -281,11 +281,8 @@ window.initConciergeWidget = function (options) {
     // Quick Actions
     window.triggerQuickAction = function (action) {
         if (action === 'reservation') {
-            if (checkBusinessHours()) {
-                renderReservationForm();
-            } else {
-                addMessage(WIDGET_CONFIG.messages.offHours, 'bot');
-            }
+            // Allow reservations 24/7
+            renderReservationForm();
         } else if (action === 'recommend') {
             const context = collectPageMenuContext();
             if (context && context.items && context.items.length > 0) {
