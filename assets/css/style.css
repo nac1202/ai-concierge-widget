@@ -1338,6 +1338,30 @@ footer {
     fill: none;
 }
 
+.header-btn {
+    background: none;
+    border: none;
+    color: white;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    /* Ensure flexbox for centering */
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    width: 36px;
+    /* Default width */
+    height: 36px;
+    /* Default height */
+    box-sizing: border-box;
+    /* Include padding in width */
+}
+
+.header-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
 .header-controls {
     display: flex;
     align-items: center;
