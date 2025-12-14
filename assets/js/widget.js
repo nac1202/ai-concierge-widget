@@ -1110,7 +1110,8 @@ window.initConciergeWidget = function (options) {
 
             // Visible Feedback
             let msg = "音声認識エラーが発生しました";
-            if (event.error === 'not-allowed') msg = "マイクの使用が許可されていません。設定をご確認ください。";
+            if (event.error === 'not-allowed') msg = "マイクの使用が許可されていません。ブラウザ設定をご確認ください。";
+            if (event.error === 'service-not-allowed') msg = "音声認識サービスが利用できません。インターネット接続または端末設定をご確認ください。";
             if (event.error === 'no-speech') return; // Ignore silent timeout
 
             addMessage(`[システム] ${msg} (${event.error})`, "bot");
@@ -1196,7 +1197,7 @@ window.initConciergeWidget = function (options) {
     // Clear potential legacy history
     localStorage.removeItem("chatHistory");
 
-    const welcomeMsg = `いらっしゃいませ！ ${options.siteName}へようこそ！\n\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」）`;
+    const welcomeMsg = `いらっしゃいませ！ ${WIDGET_CONFIG.brandName}へようこそ！\n\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」）`;
     addMessage(welcomeMsg, "bot");
     // Add to history so AI knows it has already greeted
     conversationHistory.push({ role: "model", parts: [{ text: welcomeMsg }] });
