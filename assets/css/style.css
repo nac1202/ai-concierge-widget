@@ -1341,7 +1341,7 @@ footer {
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 12px;
 }
 
 .header-btn svg {
