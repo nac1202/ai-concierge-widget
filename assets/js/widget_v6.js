@@ -204,6 +204,12 @@ window.initConciergeWidget = function (options) {
     const chatSendBtn = document.getElementById("chat-send");
     const cameraBtn = document.getElementById("camera-btn");
 
+    // --- STATE VARIABLES ---
+    let isTtsEnabled = false;
+    let isListening = false;
+    let recognition = null;
+    let availableVoices = [];
+
     function updateLanguageURI() {
         // Update Static Text
         const t = I18N[currentLang];
@@ -401,9 +407,8 @@ window.initConciergeWidget = function (options) {
     // --- State ---
     let isAvatarVisible = true;
     let isTransparent = false;
-    let isListening = false;
-    let recognition;
-    let isTtsEnabled = false; // Default to FALSE to force user interaction/unlock
+    // Variables hoisted to top
+    // let isTtsEnabled, isListening etc removed to avoid redeclaration
     let isContinuousMode = true; // Default to continuous mode for voice
     let lastMentionedProduct = ""; // Context for demonstratives
     let conversationHistory = [];
@@ -1214,7 +1219,8 @@ ${langInstruction}
 
     // Enhanced TTS
     // --- Enhanced TTS (Robust) ---
-    let availableVoices = [];
+    // --- Enhanced TTS (Robust) ---
+    // availableVoices hoisted to top
 
     function loadVoices() {
         availableVoices = speechSynthesis.getVoices();
@@ -1287,9 +1293,10 @@ ${langInstruction}
         }
     }
 
-    ttsToggle.addEventListener("click", () => {
-        console.log("TTS Toggle Clicked. Toggling to:", !isTtsEnabled);
+    ttsToggle.onclick = () => {
+        console.log("TTS Toggle Clicked. Current state:", isTtsEnabled);
         isTtsEnabled = !isTtsEnabled;
+        console.log("TTS Toggled to:", isTtsEnabled);
 
         if (isTtsEnabled) {
             ttsToggle.classList.add("active");
@@ -1302,7 +1309,7 @@ ${langInstruction}
             ttsToggle.classList.remove("active");
             speechSynthesis.cancel();
         }
-    });
+    };
 
 
 
