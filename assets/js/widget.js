@@ -31,7 +31,9 @@ const I18N = {
         send: "送信",
         micErrorNotAllowed: "マイクの使用が許可されていません。ブラウザ設定をご確認ください。",
         micErrorService: "音声認識サービスが利用できません。SafariやChromeで開き直して再度お試しください。",
-        visionInstruct: "画像の内容について親切にコメントしてください。"
+        visionInstruct: "画像の内容について親切にコメントしてください。",
+        langGreeting: "こんにちは！何かお手伝いできることはありますか？",
+        langCode: "JP"
     },
     en: {
         placeholder: "Type a message...",
@@ -43,7 +45,9 @@ const I18N = {
         send: "Send",
         micErrorNotAllowed: "Microphone access denied. Please check browser settings.",
         micErrorService: "Speech service unavailable. Please try Chrome or Safari.",
-        visionInstruct: "Please describe this image in English."
+        visionInstruct: "Please describe this image in English.",
+        langGreeting: "Hello! How can I help you?",
+        langCode: "EN"
     },
     zh: {
         placeholder: "请输入讯息...",
@@ -55,7 +59,9 @@ const I18N = {
         send: "发送",
         micErrorNotAllowed: "麦克风访问被拒绝。请检查浏览器设置。",
         micErrorService: "语音服务不可用。请尝试 Chrome 或 Safari。",
-        visionInstruct: "请用中文描述这张图片。"
+        visionInstruct: "请用中文描述这张图片。",
+        langGreeting: "你好！有什么我可以帮你的吗？",
+        langCode: "ZH"
     }
 };
 
@@ -97,8 +103,8 @@ const WIDGET_HTML = `
                         <button class="header-btn" id="tts-toggle" title="音声読み上げ">
                             <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                         </button>
-                        <button class="header-btn" id="lang-btn" title="言語切替">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        <button class="header-btn lang-text-btn" id="lang-btn" title="言語切替">
+                            JP
                         </button>
                         <button class="header-btn close-btn" id="close-chat" title="閉じる">
                             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -192,7 +198,10 @@ window.initConciergeWidget = function (options) {
         const t = I18N[currentLang];
         chatInput.placeholder = t.placeholder;
         cameraBtn.title = t.camera;
+        chatInput.placeholder = t.placeholder;
+        cameraBtn.title = t.camera;
         chatSendBtn.title = t.send;
+        langBtn.textContent = t.langCode;
 
         // Update Speech synthesis/recognition lang
         if (recognition) {
@@ -206,7 +215,9 @@ window.initConciergeWidget = function (options) {
         else currentLang = 'ja';
 
         updateLanguageURI();
-        addMessage(`[System] Language switched to ${currentLang.toUpperCase()}`, "bot");
+
+        // AI Greeting instead of System Log
+        addMessage(I18N[currentLang].langGreeting, "bot");
     });
 
     // Auto-detect Brand Color
