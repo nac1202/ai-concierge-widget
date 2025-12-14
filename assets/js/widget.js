@@ -107,6 +107,9 @@ const WIDGET_HTML = `
                         <div class="camera-controls">
                             <button id="camera-cancel-btn" class="camera-ctrl-btn cancel">キャンセル</button>
                             <button id="camera-shutter-btn" class="camera-ctrl-btn shutter"><div class="shutter-inner"></div></button>
+                            <button id="camera-flip-btn" class="camera-ctrl-btn flip" title="カメラ切り替え">
+                                <svg class="icon-line" viewBox="0 0 24 24"><path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8h1.236c.642-3.725 3.861-6.611 7.764-6.611 4.418 0 8 3.582 8 8h-1.236l2.236 2.611 2.236-2.611h-1.236zm-8 12.389c-3.903 0-7.122-2.886-7.764-6.611h-1.236c0 4.418 3.582 8 8 8s8-3.582 8-8h-1.236c-.642 3.725-3.861 6.611-7.764 6.611z"/></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -636,6 +639,17 @@ window.initConciergeWidget = function (options) {
 
 
 
+    function getVisionPrompt(type) {
+        const map = {
+            restaurant: "ユーザーから画像が送信されました。「画像を拝見しました。」から回答を始めてください。画像に写っている料理やメニューを特定し、相性の良いサイドメニューやドリンクを提案してください。",
+            salon: "ユーザーから髪やヘアスタイルの画像が届きました。「画像を拝見しました。」から回答を始めてください。髪質、ダメージ具合、スタイルなどを（画像から分かる範囲で）専門的に分析し、その悩みを解決するためのメニューやケア方法を提案してください。",
+            retail: "ユーザーから商品画像が届きました。「画像を拝見しました。」から回答を始めてください。その商品の型番や特徴を視覚的に分析し、スペック詳細や、どのようなシーンで役立つかを「プロの販売員」として解説してください。",
+            default: "ユーザーから画像が送信されました。「画像を拝見しました。」から回答を始めてください。画像の内容について親切にコメントしてください。"
+        };
+        return map[type] || map.default;
+    }
+
+
     // DOM-based Context Collection (For Prompt)
     function collectPageMenuContext() {
         const sel = WIDGET_CONFIG.selectors;
@@ -731,7 +745,8 @@ window.initConciergeWidget = function (options) {
 
         // If image exists, add hint to prompt
         if (imageBase64) {
-            dynamicPrompt += `\n\n【画像入力】\nユーザーから画像が送信されました。「画像を拝見しました。」から回答を始めてください。画像の内容を説明し、もしメニューや商品が写っていれば特定して案内してください。`;
+            const visionInstruction = getVisionPrompt(WIDGET_CONFIG.businessType);
+            dynamicPrompt += `\n\n【画像入力】\n${visionInstruction}`;
         }
 
         try {
@@ -924,7 +939,9 @@ window.initConciergeWidget = function (options) {
     const cameraVideo = document.getElementById("camera-video");
     const cameraCancel = document.getElementById("camera-cancel-btn");
     const cameraShutter = document.getElementById("camera-shutter-btn");
+    const cameraFlip = document.getElementById("camera-flip-btn");
     let cameraStream = null;
+    let currentFacingMode = "environment"; // 'user' or 'environment'
 
     async function initCamera() {
         // HTTPS check
@@ -934,7 +951,9 @@ window.initConciergeWidget = function (options) {
         }
 
         try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: currentFacingMode }
+            });
             cameraVideo.srcObject = cameraStream;
             cameraModal.classList.remove("hidden");
             // Trigger reflow for transition
@@ -993,9 +1012,30 @@ window.initConciergeWidget = function (options) {
         if (isTtsEnabled) speak(reply.replace(/```.*?```/g, ""));
     }
 
+    async function switchCamera() {
+        if (!cameraStream) return;
+
+        // Stop current
+        cameraStream.getTracks().forEach(track => track.stop());
+
+        // Toggle mode
+        currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: currentFacingMode }
+            });
+            cameraVideo.srcObject = cameraStream;
+        } catch (err) {
+            console.error("Camera Switch Error:", err);
+            addMessage("カメラの切り替えに失敗しました。", "bot");
+        }
+    }
+
     cameraBtn.addEventListener("click", initCamera);
     cameraCancel.addEventListener("click", stopCamera);
     cameraShutter.addEventListener("click", captureAndSend);
+    cameraFlip.addEventListener("click", switchCamera);
 
 
     function cleanUserSpeech(text) {
