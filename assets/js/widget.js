@@ -20,6 +20,47 @@ const DEFAULT_CONFIG = {
     }
 };
 
+const I18N = {
+    ja: {
+        placeholder: "メッセージを入力...",
+        sttError: "マイクエラー",
+        visionPrompt: "画像の内容について日本語で説明してください。",
+        welcome: "いらっしゃいませ！",
+        offHours: "現在営業時間外です。ご用件を承ります。",
+        camera: "カメラで質問",
+        send: "送信",
+        micErrorNotAllowed: "マイクの使用が許可されていません。ブラウザ設定をご確認ください。",
+        micErrorService: "音声認識サービスが利用できません。SafariやChromeで開き直して再度お試しください。",
+        visionInstruct: "画像の内容について親切にコメントしてください。"
+    },
+    en: {
+        placeholder: "Type a message...",
+        sttError: "Microphone Error",
+        visionPrompt: "Please describe this image in English.",
+        welcome: "Welcome!",
+        offHours: "We are currently closed. How can I help you?",
+        camera: "Ask with Camera",
+        send: "Send",
+        micErrorNotAllowed: "Microphone access denied. Please check browser settings.",
+        micErrorService: "Speech service unavailable. Please try Chrome or Safari.",
+        visionInstruct: "Please describe this image in English."
+    },
+    zh: {
+        placeholder: "请输入讯息...",
+        sttError: "麦克风错误",
+        visionPrompt: "请用中文描述这张图片。",
+        welcome: "欢迎光临！",
+        offHours: "现在是非营业时间。请告诉我您的需求。",
+        camera: "拍照提问",
+        send: "发送",
+        micErrorNotAllowed: "麦克风访问被拒绝。请检查浏览器设置。",
+        micErrorService: "语音服务不可用。请尝试 Chrome 或 Safari。",
+        visionInstruct: "请用中文描述这张图片。"
+    }
+};
+
+let currentLang = 'ja';
+
 // Will be populated in initConciergeWidget
 let WIDGET_CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
@@ -55,6 +96,9 @@ const WIDGET_HTML = `
                         </button>
                         <button class="header-btn" id="tts-toggle" title="音声読み上げ">
                             <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                        </button>
+                        <button class="header-btn" id="lang-btn" title="言語切替">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                         </button>
                         <button class="header-btn close-btn" id="close-chat" title="閉じる">
                             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -137,6 +181,33 @@ window.initConciergeWidget = function (options) {
     widgetDiv.id = 'ai-widget';
     widgetDiv.innerHTML = WIDGET_HTML;
     document.body.appendChild(widgetDiv);
+
+    const langBtn = document.getElementById("lang-btn");
+    const chatInput = document.getElementById("chat-input");
+    const chatSendBtn = document.getElementById("chat-send");
+    const cameraBtn = document.getElementById("camera-btn");
+
+    function updateLanguageURI() {
+        // Update Static Text
+        const t = I18N[currentLang];
+        chatInput.placeholder = t.placeholder;
+        cameraBtn.title = t.camera;
+        chatSendBtn.title = t.send;
+
+        // Update Speech synthesis/recognition lang
+        if (recognition) {
+            recognition.lang = (currentLang === 'en') ? 'en-US' : (currentLang === 'zh') ? 'zh-CN' : 'ja-JP';
+        }
+    }
+
+    langBtn.addEventListener("click", () => {
+        if (currentLang === 'ja') currentLang = 'en';
+        else if (currentLang === 'en') currentLang = 'zh';
+        else currentLang = 'ja';
+
+        updateLanguageURI();
+        addMessage(`[System] Language switched to ${currentLang.toUpperCase()}`, "bot");
+    });
 
     // Auto-detect Brand Color
     function autoDetectBrandColor() {
@@ -300,9 +371,7 @@ window.initConciergeWidget = function (options) {
     const avatarToggle = document.getElementById("avatar-toggle");
     const ttsToggle = document.getElementById("tts-toggle");
     const chatMessages = document.getElementById("chat-messages");
-    const chatInput = document.getElementById("chat-input");
-    const chatSend = document.getElementById("chat-send");
-    const sttBtn = document.getElementById("stt-btn");
+    // State
     // --- State ---
     let isAvatarVisible = true;
     let isTransparent = false;
@@ -315,7 +384,14 @@ window.initConciergeWidget = function (options) {
 
     // --- DYNAMIC SYSTEM PROMPT ---
     function generateSystemPrompt(cfg) {
+        // I18N Prompt
+        let langInstruction = "";
+        if (currentLang === 'en') langInstruction = "You are an English speaking assistant. Respond in English only.";
+        else if (currentLang === 'zh') langInstruction = "You are a Chinese speaking assistant. Respond in Traditional Chinese.";
+        else langInstruction = "You are a Japanese speaking assistant. Respond in Japanese.";
+
         return `
+${langInstruction}
 あなたは、企業・店舗の公式Webサイトに設置された
 「AIコンシェルジュ」です。
 
@@ -930,11 +1006,10 @@ window.initConciergeWidget = function (options) {
         isTtsEnabled = !isTtsEnabled;
         if (isTtsEnabled) { ttsToggle.classList.add("active"); } else { ttsToggle.classList.remove("active"); speechSynthesis.cancel(); }
     });
-    chatSend.addEventListener("click", sendMessage);
+    chatSendBtn.addEventListener("click", sendMessage);
     chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { if (e.isComposing) return; e.preventDefault(); sendMessage(); } });
 
     // --- Camera Logic ---
-    const cameraBtn = document.getElementById("camera-btn");
     const cameraModal = document.getElementById("camera-preview-modal");
     const cameraVideo = document.getElementById("camera-video");
     const cameraCancel = document.getElementById("camera-cancel-btn");
