@@ -1150,6 +1150,20 @@ ${langInstruction}
     }
 
     // Enhanced TTS
+    // --- Enhanced TTS (Robust) ---
+    let availableVoices = [];
+
+    function loadVoices() {
+        availableVoices = speechSynthesis.getVoices();
+        // console.log("Voices loaded:", availableVoices.length);
+    }
+
+    // Ensure voices are loaded (Chrome needs this event)
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    loadVoices(); // Try immediately too
+
     function speak(text) {
         if (!isTtsEnabled) return;
 
@@ -1158,28 +1172,56 @@ ${langInstruction}
 
         const utter = new SpeechSynthesisUtterance(text);
 
-        // Voice Tuning
-        const voices = speechSynthesis.getVoices();
-        // Try to find a friendly female JP voice (e.g., Google 日本語, Microsoft Haruka, etc.)
-        const targetVoice = voices.find(v => v.lang.includes("ja") && (v.name.includes("Google") || v.name.includes("Haruka") || v.name.includes("Ichiro") === false));
-        if (targetVoice) utter.voice = targetVoice;
+        // Voice Tuning - Robust Selection
+        if (availableVoices.length === 0) loadVoices();
 
-        utter.pitch = 1.1; // Slightly higher
-        utter.rate = 0.95; // Slightly slower
+        // Priority: Google JP -> Microsoft Haruka -> iOS/Mac Default -> Any JP
+        const targetVoice = availableVoices.find(v => v.lang === "ja-JP" && v.name.includes("Google")) ||
+            availableVoices.find(v => v.name.includes("Haruka")) ||
+            availableVoices.find(v => v.lang.includes("ja"));
+
+        if (targetVoice) {
+            utter.voice = targetVoice;
+            // console.log("Using voice:", targetVoice.name);
+        }
+
+        utter.pitch = 1.0;
+        utter.rate = 1.0;
+
+        // Visual Feedback (Optional - could add class to avatar)
+        // assistantAvatar.classList.add("speaking");
 
         // Continuous Conversation
         utter.onend = () => {
+            // assistantAvatar.classList.remove("speaking");
             if (isContinuousMode && isTtsEnabled) {
-                // Restart listening automatically
-                console.log("TTS ended, restarting STT...");
                 setTimeout(() => {
                     if (!isListening) startListening();
-                }, 500);
+                }, 400);
             }
+        };
+
+        utter.onerror = (e) => {
+            console.error("TTS Error:", e);
         };
 
         speechSynthesis.speak(utter);
     }
+
+    ttsToggle.addEventListener("click", () => {
+        isTtsEnabled = !isTtsEnabled;
+        if (isTtsEnabled) {
+            ttsToggle.classList.add("active");
+
+            // UNLOCK & CONFIRM: Speak immediately on user gesture
+            // This is critical for mobile browsers.
+            speak("音声をオンにしました。");
+
+        } else {
+            ttsToggle.classList.remove("active");
+            speechSynthesis.cancel();
+        }
+    });
 
 
 
