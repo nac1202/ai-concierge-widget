@@ -1273,7 +1273,7 @@ footer {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 0 12px !important;
+    padding: 0 20px 0 12px !important;
     height: 48px !important;
     background: linear-gradient(180deg, color-mix(in srgb, var(--widget-theme-color), white 25%) 0%, var(--widget-theme-color) 100%);
 }
