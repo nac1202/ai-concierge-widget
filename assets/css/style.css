@@ -1351,6 +1351,12 @@ footer {
     border-radius: 0 !important;
 }
 
+#close-chat svg {
+    stroke: #fff !important;
+    width: 20px;
+    height: 20px;
+}
+
 .header-btn svg {
     width: 20px;
     height: 20px;
