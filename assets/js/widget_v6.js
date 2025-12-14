@@ -3,7 +3,7 @@
 console.log("Widget JS Loaded v6.3 - 2025-12-14 15:53");
 // --- DEFAULT CONFIGURATION ---
 const DEFAULT_CONFIG = {
-    brandName: "AI Concierge",
+    brandName: "BUN BUN BURGER",
     themeColor: "#4169e1",
     businessType: "generic", // restaurant, retail, salon, generic
     hours: { open: 9, close: 18 },
