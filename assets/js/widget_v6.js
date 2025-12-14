@@ -1165,6 +1165,9 @@ ${langInstruction}
     loadVoices(); // Try immediately too
 
     function speak(text) {
+        // Debug: Check entry
+        alert("Speak called: " + text.substring(0, 10) + " / Enabled: " + isTtsEnabled);
+
         if (!isTtsEnabled) return;
 
         // Cancel current speech
@@ -1175,6 +1178,9 @@ ${langInstruction}
         // Voice Tuning - Robust Selection
         if (availableVoices.length === 0) loadVoices();
 
+        // Debug: Voice availability
+        alert("Voices available: " + availableVoices.length);
+
         // Priority: Google JP -> Microsoft Haruka -> iOS/Mac Default -> Any JP
         const targetVoice = availableVoices.find(v => v.lang === "ja-JP" && v.name.includes("Google")) ||
             availableVoices.find(v => v.name.includes("Haruka")) ||
@@ -1182,7 +1188,9 @@ ${langInstruction}
 
         if (targetVoice) {
             utter.voice = targetVoice;
-            // console.log("Using voice:", targetVoice.name);
+            alert("Using voice: " + targetVoice.name);
+        } else {
+            alert("No JP Voice Found! Langs: " + availableVoices.map(v => v.lang).join(","));
         }
 
         utter.pitch = 1.0;
@@ -1203,13 +1211,21 @@ ${langInstruction}
 
         utter.onerror = (e) => {
             console.error("TTS Error:", e);
+            alert("TTS Error Event: " + e.error);
         };
 
-        speechSynthesis.speak(utter);
+        try {
+            speechSynthesis.speak(utter);
+        } catch (e) {
+            alert("TTS Exception: " + e.message);
+        }
     }
 
     ttsToggle.addEventListener("click", () => {
         isTtsEnabled = !isTtsEnabled;
+
+        alert("TTS Toggle: " + isTtsEnabled + "\nVoices: " + availableVoices.length);
+
         if (isTtsEnabled) {
             ttsToggle.classList.add("active");
 
