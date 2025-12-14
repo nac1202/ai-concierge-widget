@@ -58,7 +58,8 @@ export default async function handler(req, res) {
       contents: contents
     };
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=" + apiKey, {
+    // Verify model is gemini-1.5-flash which supports Pay-As-You-Go billing
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -87,7 +88,7 @@ export default async function handler(req, res) {
 
       return res.status(500).json({
         error: {
-          message: `(v3) Model Error: ${error.message}. \n\nAvailable Models for this Key: [${availableModels}]`
+          message: `(v4) Model Error: ${error.message}. \n\n[Check Billing]: Ensure your GCP project has billing enabled to avoid 'free_tier_requests' errors. \nAvailable Models: [${availableModels}]`
         }
       });
     } catch (listError) {
