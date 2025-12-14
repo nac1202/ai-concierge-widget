@@ -109,6 +109,14 @@ const WIDGET_HTML = `
                             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
                     </div>
+                    <div class="color-popup" id="color-popup">
+                        <div class="color-option" data-color="#d32f2f" style="background:#d32f2f"></div>
+                        <div class="color-option" data-color="#4169e1" style="background:#4169e1"></div>
+                        <div class="color-option" data-color="#2ecc71" style="background:#2ecc71"></div>
+                        <div class="color-option" data-color="#f39c12" style="background:#f39c12"></div>
+                        <div class="color-option" data-color="#8e44ad" style="background:#8e44ad"></div>
+                        <div class="color-option" data-color="#34495e" style="background:#34495e"></div>
+                    </div>
                 </div>
                 
                 <!-- Quick Actions Bar -->
@@ -1256,6 +1264,7 @@ ${langInstruction}
     }
 
     ttsToggle.addEventListener("click", () => {
+        console.log("TTS Toggle Clicked. Toggling to:", !isTtsEnabled);
         isTtsEnabled = !isTtsEnabled;
 
         if (isTtsEnabled) {
