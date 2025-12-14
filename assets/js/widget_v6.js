@@ -1,5 +1,6 @@
 
 // --- CONFIGURATION ---
+console.log("Widget JS Loaded v6.3 - 2025-12-14 15:53");
 // --- DEFAULT CONFIGURATION ---
 const DEFAULT_CONFIG = {
     brandName: "AI Concierge",
@@ -103,9 +104,7 @@ const WIDGET_HTML = `
                         <button class="header-btn" id="tts-toggle" title="音声読み上げ">
                             <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                         </button>
-                        <button class="header-btn lang-text-btn" id="lang-btn" title="言語切替">
-                            JP
-                        </button>
+
                         <button class="header-btn close-btn" id="close-chat" title="閉じる">
                             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
@@ -121,6 +120,10 @@ const WIDGET_HTML = `
                     <span class="action-chip" onclick="window.triggerQuickAction('recommend')">
                         <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         おすすめ
+                    </span>
+                    <span class="action-chip" id="lang-toggle-chip">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        <span id="lang-code-text">JP</span>
                     </span>
                 </div>
 
@@ -188,7 +191,7 @@ window.initConciergeWidget = function (options) {
     widgetDiv.innerHTML = WIDGET_HTML;
     document.body.appendChild(widgetDiv);
 
-    const langBtn = document.getElementById("lang-btn");
+    const langBtn = document.getElementById("lang-toggle-chip");
     const chatInput = document.getElementById("chat-input");
     const chatSendBtn = document.getElementById("chat-send");
     const cameraBtn = document.getElementById("camera-btn");
@@ -201,7 +204,7 @@ window.initConciergeWidget = function (options) {
         chatInput.placeholder = t.placeholder;
         cameraBtn.title = t.camera;
         chatSendBtn.title = t.send;
-        langBtn.textContent = t.langCode;
+        document.getElementById("lang-code-text").textContent = t.langCode;
 
         // Update Speech synthesis/recognition lang
         if (recognition) {
@@ -1185,13 +1188,31 @@ ${langInstruction}
 
 
     function startListening() {
-        if (!recognition) return;
+        if (!recognition) {
+            alert("音声認識機能が利用できません。");
+            return;
+        }
         try {
             recognition.start();
             console.log("STT Started");
         } catch (e) {
-            // Already started or error
-            console.error(e);
+            console.error("STT Start Error:", e);
+            // Show visible error to user
+            if (e.message && e.message.includes("not allowed")) {
+                addMessage("マイクの使用が許可されていません。", "bot");
+            } else if (location.protocol === 'file:') {
+                alert("【注意】ローカルファイル(file://)ではマイクが機能しない場合があります。\nローカルサーバー(localhost)またはHTTPS環境で実行してください。");
+                addMessage("[システム] file:// プロトコルではマイクが動作しない可能性があります。", "bot");
+            } else {
+                // specific checking for known states (e.g. already started)
+                if (e.name === "InvalidStateError") {
+                    // Already started, ignore or stop and restart?
+                    // Usually implies it's already running.
+                    console.log("Already listening");
+                } else {
+                    addMessage("音声認識を開始できませんでした: " + e.message, "bot");
+                }
+            }
         }
     }
 
@@ -1201,29 +1222,35 @@ ${langInstruction}
         console.log("STT Stopped");
     }
 
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    // --- STT Logic (Robust with Debug) ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const sttButton = document.getElementById("stt-btn");
+
+    if (SpeechRecognition) {
+        // Debug: Support confirmed
+        // console.log("STT Supported"); 
+        // addMessage("[System] STT Supported. Init...", "bot"); // Uncomment for verbose debug
+
         recognition = new SpeechRecognition();
         recognition.lang = 'ja-JP';
-        recognition.continuous = false; // We handle loop manually
+        recognition.continuous = false;
         recognition.interimResults = false;
 
         recognition.onstart = () => {
             isListening = true;
-            sttBtn.classList.add("listening");
+            const btn = document.getElementById("stt-btn");
+            if (btn) btn.classList.add("listening");
+            // addMessage("[System] Listening Started...", "bot"); 
         };
 
         recognition.onend = () => {
             isListening = false;
-            sttBtn.classList.remove("listening");
-            // Note: If continuous mode is on, we usually restart AFTER TTS. 
-            // But if user didn't say anything (no result), we might need to handle timeout?
-            // For now, we rely on TTS onend to loop, or manual click.
+            const btn = document.getElementById("stt-btn");
+            if (btn) btn.classList.remove("listening");
         };
 
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
-            // Pre-process
             const processedText = cleanUserSpeech(transcript);
             chatInput.value = processedText;
             sendMessage();
@@ -1232,36 +1259,70 @@ ${langInstruction}
         recognition.onerror = (event) => {
             console.error("STT Error", event.error);
             isListening = false;
-            sttBtn.classList.remove("listening");
+            const btn = document.getElementById("stt-btn");
+            if (btn) btn.classList.remove("listening");
 
-            // Visible Feedback
-            let msg = "音声認識エラーが発生しました";
-            if (event.error === 'not-allowed') msg = "マイクの使用が許可されていません。ブラウザ設定をご確認ください。";
-            if (event.error === 'service-not-allowed') msg = "LINEなどのアプリ内ブラウザではマイクが制限されています。SafariやChromeで開き直して再度お試しください。";
-            if (event.error === 'no-speech') return; // Ignore silent timeout
-
-            addMessage(`[システム] ${msg} (${event.error})`, "bot");
+            let msg = "音声認識エラー: " + event.error;
+            if (event.error === 'not-allowed') msg = "マイクの使用が許可されていません。";
+            if (event.error === 'service-not-allowed') msg = "音声認識サービスが利用できません。";
+            if (event.error === 'no-speech') return; // Ignore no-speech noise
+            addMessage(`[システム] ${msg}`, "bot");
         };
 
         const handleSttToggle = (e) => {
-            // e.preventDefault(); // Might block permission on mobile? Let's try removing it for click.
+            alert('Mic Clicked');
+            // Undeniable feedback for debugging
+            // alert("Mic Clicked: " + e.type);
+
+            // Prevent default only on touch to allow click to work naturally if needed, 
+            // but we want to stop propagation.
+            // On hybrid devices, we might get both. 
+            // Strategy: debouncing or just rely on the flag.
+
+            // For debugging:
+            console.log("Mic interaction detected:", e.type);
+
+            if (e.type === 'touchstart') {
+                e.preventDefault(); // Stop mouse emulation
+            }
+
             e.stopPropagation();
             if (isListening) stopListening();
             else startListening();
         };
 
-        // Simplified to click only for better mobile compatibility (avoiding ghost clicks/prevention issues)
-        sttBtn.addEventListener("click", handleSttToggle);
+        if (sttButton) {
+            // Simplest approach: Unbind visually (cannot easily remove anonymous without reference- but we can overwrite onclick)
+            // For now, let's just ADD the listeners cleanly.
+            // Note: If this script runs twice, we might stack listeners. 
+            // Ideally we check a flag.
+            if (!sttButton.hasAttribute("data-stt-init")) {
+                sttButton.setAttribute("data-stt-init", "true");
+
+                // Use standard listeners
+                sttButton.addEventListener("touchstart", handleSttToggle, { passive: false });
+                sttButton.addEventListener("click", handleSttToggle);
+
+                console.log("STT Listeners Attached");
+            }
+        } else {
+            console.error("STT Button not found in DOM");
+        }
     } else {
-        // Unsupported Browser Handling
-        sttBtn.disabled = true;
-        sttBtn.style.opacity = "0.5";
-        sttBtn.style.cursor = "not-allowed";
-        sttBtn.title = "このブラウザでは音声入力に対応していません";
+        // Not Supported
+        console.warn("STT Not Supported");
+        addMessage("[システム] このブラウザは音声入力API(SpeechRecognition)に対応していません。", "bot");
+        if (sttButton) {
+            sttButton.style.opacity = "0.5";
+            sttButton.onclick = () => {
+                alert("このブラウザは音声入力に対応していません。");
+            };
+        }
     }
 
     // Ensure clean state on init
-    if (sttBtn) sttBtn.classList.remove("listening", "recording");
+    const sttButtonInitial = document.getElementById("stt-btn");
+    if (sttButtonInitial) sttButtonInitial.classList.remove("listening", "recording");
 
 
     // Product Detail Modal Logic
