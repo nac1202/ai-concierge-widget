@@ -1111,7 +1111,7 @@ window.initConciergeWidget = function (options) {
             // Visible Feedback
             let msg = "音声認識エラーが発生しました";
             if (event.error === 'not-allowed') msg = "マイクの使用が許可されていません。ブラウザ設定をご確認ください。";
-            if (event.error === 'service-not-allowed') msg = "音声認識サービスが利用できません。インターネット接続または端末設定をご確認ください。";
+            if (event.error === 'service-not-allowed') msg = "LINEなどのアプリ内ブラウザではマイクが制限されています。SafariやChromeで開き直して再度お試しください。";
             if (event.error === 'no-speech') return; // Ignore silent timeout
 
             addMessage(`[システム] ${msg} (${event.error})`, "bot");
