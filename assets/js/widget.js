@@ -1107,18 +1107,24 @@ window.initConciergeWidget = function (options) {
             console.error("STT Error", event.error);
             isListening = false;
             sttBtn.classList.remove("listening");
+
+            // Visible Feedback
+            let msg = "音声認識エラーが発生しました";
+            if (event.error === 'not-allowed') msg = "マイクの使用が許可されていません。設定をご確認ください。";
+            if (event.error === 'no-speech') return; // Ignore silent timeout
+
+            addMessage(`[システム] ${msg} (${event.error})`, "bot");
         };
 
         const handleSttToggle = (e) => {
-            e.preventDefault(); // Prevent ghost clicks
+            // e.preventDefault(); // Might block permission on mobile? Let's try removing it for click.
             e.stopPropagation();
             if (isListening) stopListening();
             else startListening();
         };
 
-        // As requested: click and touchend
+        // Simplified to click only for better mobile compatibility (avoiding ghost clicks/prevention issues)
         sttBtn.addEventListener("click", handleSttToggle);
-        sttBtn.addEventListener("touchend", handleSttToggle);
     } else {
         // Unsupported Browser Handling
         sttBtn.disabled = true;
