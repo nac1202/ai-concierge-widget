@@ -1207,7 +1207,7 @@ ${langInstruction}
 
     function loadVoices() {
         availableVoices = speechSynthesis.getVoices();
-        // console.log("Voices loaded:", availableVoices.length);
+        console.log("TTS: Voices loaded count:", availableVoices.length);
     }
 
     // Ensure voices are loaded (Chrome needs this event)
@@ -1234,7 +1234,13 @@ ${langInstruction}
 
         if (targetVoice) {
             utter.voice = targetVoice;
+            console.log("TTS: Using voice:", targetVoice.name);
+        } else {
+            console.log("TTS: No specific voice found. Using default.");
         }
+
+        // Explicitly set lang to ensure it works even if voice is default
+        utter.lang = (currentLang === 'en') ? 'en-US' : (currentLang === 'zh') ? 'zh-CN' : 'ja-JP';
 
         utter.pitch = 1.0;
         utter.rate = 1.0;
@@ -1257,6 +1263,7 @@ ${langInstruction}
         };
 
         try {
+            console.log("TTS: calling speechSynthesis.speak() with text:", text);
             speechSynthesis.speak(utter);
         } catch (e) {
             console.error("TTS Exception:", e);
