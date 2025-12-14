@@ -653,38 +653,53 @@ ${langInstruction}
 
     // Helper: Build Product Registry from DOM
     function buildProductRegistry() {
-        const registry = {};
-        const sel = WIDGET_CONFIG.selectors;
+        try {
+            const registry = {};
+            const sel = WIDGET_CONFIG.selectors;
 
-        // Scan existing product cards to build a lookup
-        document.querySelectorAll(sel.productCard).forEach((card, index) => {
-            const title = card.querySelector(sel.productName)?.textContent.trim() || "";
-            const desc = card.querySelector(sel.productDesc)?.textContent.trim() || "";
-            const price = card.querySelector(sel.productPrice)?.textContent.trim() || "";
-            const img = card.querySelector(sel.productImage)?.getAttribute("src") || "";
-            // Basic ID generation if not present
-            const id = `item_${index + 1}`;
+            // Scan existing product cards to build a lookup
+            const cards = document.querySelectorAll(sel.productCard);
+            if (!cards) return {};
 
-            let tags = [];
-            if (sel.productTags) {
-                tags = Array.from(card.querySelectorAll(sel.productTags)).map(li => li.textContent.trim());
-            }
+            cards.forEach((card, index) => {
+                try {
+                    const title = card.querySelector(sel.productName)?.textContent.trim() || "";
+                    if (!title) return; // Skip if no title
 
-            if (id && title) {
-                registry[id] = {
-                    id,
-                    name: title,
-                    description: desc,
-                    price,
-                    imageUrl: img,
-                    tags,
-                    detailText: desc // Use description as detail text for now
-                };
-            }
-        });
-        // Expose to global for modal lookup
-        window.chatProductRegistry = registry;
-        return registry;
+                    const desc = card.querySelector(sel.productDesc)?.textContent.trim() || "";
+                    const price = card.querySelector(sel.productPrice)?.textContent.trim() || "";
+                    const img = card.querySelector(sel.productImage)?.getAttribute("src") || "";
+                    // Basic ID generation if not present
+                    const id = `item_${index + 1}`;
+
+                    let tags = [];
+                    if (sel.productTags) {
+                        const tagEls = card.querySelectorAll(sel.productTags);
+                        if (tagEls) tags = Array.from(tagEls).map(li => li.textContent.trim());
+                    }
+
+                    if (id && title) {
+                        registry[id] = {
+                            id,
+                            name: title,
+                            description: desc,
+                            price,
+                            imageUrl: img,
+                            tags,
+                            detailText: desc // Use description as detail text for now
+                        };
+                    }
+                } catch (err) {
+                    console.warn("Error parsing product card:", err);
+                }
+            });
+            // Expose to global for modal lookup
+            window.chatProductRegistry = registry;
+            return registry;
+        } catch (e) {
+            console.error("Critical Error in buildProductRegistry:", e);
+            return {};
+        }
     }
 
     function createChatProductCard(product) {
@@ -862,53 +877,75 @@ ${langInstruction}
 
     // Msg Logic
     function addMessage(text, role) {
-        const row = document.createElement("div");
-        row.className = `message-row ${role === 'user' ? 'user-msg' : 'bot-msg'}`;
-        const jsonRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
-        const match = text.match(jsonRegex);
-        let displayText = text;
-        let productData = null;
-        if (match && role === "bot") {
+        try {
+            const row = document.createElement("div");
+            row.className = `message-row ${role === 'user' ? 'user-msg' : 'bot-msg'}`;
+            const jsonRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
+            const match = text.match(jsonRegex);
+            let displayText = text;
+            let productData = null;
+            if (match && role === "bot") {
+                try {
+                    productData = JSON.parse(match[1]);
+                    displayText = text.replace(match[0], "").trim();
+                } catch (e) { console.warn("JSON Parse Error", e); }
+            }
+
+            // Inject Product Cards (Rich EC Style)
+            // Robust registry build
+            let registry = {};
             try {
-                productData = JSON.parse(match[1]);
-                displayText = text.replace(match[0], "").trim();
-            } catch (e) { console.warn("JSON Parse Error", e); }
-        }
+                registry = buildProductRegistry();
+            } catch (e) {
+                console.error("Registry build failed in addMessage", e);
+            }
 
-        // Inject Product Cards (Rich EC Style)
-        const registry = buildProductRegistry();
+            // 1. If JSON from Bot (Recommendations)
+            if (productData && productData.products && productData.products.length > 0) {
+                // Use the JSON data but enriched/rendered with new style
+                row.appendChild(renderProductStack(productData.products, registry));
+            }
+            // 2. If Text Mention (Single Inquiry) - AND no JSON to avoid dupes [Simple logic for now]
+            else if (role === "bot") {
+                // Check for mentions
+                const productNames = Object.keys(registry).sort((a, b) => b.length - a.length);
+                let foundName = "";
 
-        // 1. If JSON from Bot (Recommendations)
-        if (productData && productData.products && productData.products.length > 0) {
-            // Use the JSON data but enriched/rendered with new style
-            row.appendChild(renderProductStack(productData.products, registry));
-        }
-        // 2. If Text Mention (Single Inquiry) - AND no JSON to avoid dupes [Simple logic for now]
-        else if (role === "bot") {
-            // Check for mentions
-            const productNames = Object.keys(registry).sort((a, b) => b.length - a.length);
-            let foundName = "";
+                for (const name of productNames) {
+                    if (displayText.includes(name)) {
+                        foundName = name;
+                        break; // Only start with the first found
+                    }
+                }
 
-            for (const name of productNames) {
-                if (displayText.includes(name)) {
-                    foundName = name;
-                    break; // Only start with the first found
+                if (foundName) {
+                    lastMentionedProduct = foundName; // Update context
+                    row.appendChild(createChatProductCard(registry[foundName]));
                 }
             }
 
-            if (foundName) {
-                lastMentionedProduct = foundName; // Update context
-                row.appendChild(createChatProductCard(registry[foundName]));
+            const bubble = document.createElement("div");
+            bubble.className = "message-bubble";
+            bubble.innerHTML = displayText.replace(/\n/g, '<br>');
+            row.appendChild(bubble);
+
+            chatMessages.appendChild(row);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        } catch (err) {
+            console.error("Critical Error in addMessage:", err);
+            // Fallback: try to just show text if possible
+            try {
+                const chatMessages = document.getElementById("chat-messages");
+                if (chatMessages) {
+                    const errorRow = document.createElement("div");
+                    errorRow.className = "message-row bot-msg";
+                    errorRow.innerText = text; // Fallback plain text
+                    chatMessages.appendChild(errorRow);
+                }
+            } catch (e2) {
+                console.error("Fallback addMessage failed", e2);
             }
         }
-
-        const bubble = document.createElement("div");
-        bubble.className = "message-bubble";
-        bubble.innerHTML = displayText.replace(/\n/g, '<br>');
-        row.appendChild(bubble);
-
-        chatMessages.appendChild(row);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
     async function sendMessage() {
@@ -1429,14 +1466,18 @@ ${langInstruction}
     });
 
     // Ensure clean state (Wipe any static/ghost messages)
-    chatMessages.innerHTML = "";
-    // Clear potential legacy history
-    localStorage.removeItem("chatHistory");
+    try {
+        chatMessages.innerHTML = "";
+        // Clear potential legacy history
+        localStorage.removeItem("chatHistory");
 
-    const welcomeMsg = `いらっしゃいませ！ ${WIDGET_CONFIG.brandName}へようこそ！\n\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」）`;
-    addMessage(welcomeMsg, "bot");
-    // Add to history so AI knows it has already greeted
-    conversationHistory.push({ role: "model", parts: [{ text: welcomeMsg }] });
+        const welcomeMsg = `いらっしゃいませ！ ${WIDGET_CONFIG.brandName}へようこそ！\n\n何かお手伝いできることはありますか？\n（例：「おすすめのメニューは？」）`;
+        addMessage(welcomeMsg, "bot");
+        // Add to history so AI knows it has already greeted
+        conversationHistory.push({ role: "model", parts: [{ text: welcomeMsg }] });
+    } catch (err) {
+        console.error("Initialization Logic Failed:", err);
+    }
 };
 
 
